@@ -105,12 +105,7 @@ router.get('/:id', validateParams(idParamSchema), controller.findOne);
  *       401:
  *         description: Unauthorized
  */
-router.post(
-  '/',
-  authenticate,
-  validateBody(createExampleSchema),
-  controller.create
-);
+router.post('/', authenticate, validateBody(createExampleSchema), controller.create);
 
 /**
  * @swagger

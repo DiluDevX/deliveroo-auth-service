@@ -17,7 +17,7 @@ function createValidator(target: ValidationTarget) {
       } catch (error) {
         if (error instanceof ZodError) {
           const errors: Record<string, string[]> = {};
-          
+
           error.errors.forEach((err) => {
             const path = err.path.join('.');
             if (!errors[path]) {

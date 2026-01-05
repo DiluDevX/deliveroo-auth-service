@@ -38,7 +38,7 @@ const swaggerSpec = swaggerJsdoc(options);
 
 export function setupSwagger(app: Express): void {
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-  
+
   // Expose raw OpenAPI spec
   app.get('/api-docs.json', (_req, res) => {
     res.setHeader('Content-Type', 'application/json');

@@ -30,11 +30,7 @@ export class ExampleController {
     }
   }
 
-  async findOne(
-    req: Request<IdParam>,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
+  async findOne(req: Request<IdParam>, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
       const example = await exampleService.findById(id);
@@ -83,11 +79,7 @@ export class ExampleController {
     }
   }
 
-  async delete(
-    req: Request<IdParam>,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
+  async delete(req: Request<IdParam>, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
       await exampleService.delete(id);

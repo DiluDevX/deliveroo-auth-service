@@ -32,9 +32,9 @@ app.use(errorHandler);
 // Graceful shutdown
 const gracefulShutdown = async (signal: string) => {
   logger.info(`${signal} received. Starting graceful shutdown...`);
-  
+
   await disconnectDatabase();
-  
+
   process.exit(0);
 };
 
@@ -45,7 +45,7 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 const startServer = async () => {
   try {
     await connectDatabase();
-    
+
     app.listen(config.port, () => {
       logger.info(`Server running on port ${config.port}`);
       logger.info(`API Docs available at http://localhost:${config.port}/api-docs`);

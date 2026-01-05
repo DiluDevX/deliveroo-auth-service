@@ -11,12 +11,7 @@ interface ErrorResponse {
   stack?: string;
 }
 
-export function errorHandler(
-  err: Error,
-  _req: Request,
-  res: Response,
-  _next: NextFunction
-): void {
+export function errorHandler(err: Error, _req: Request, res: Response, _next: NextFunction): void {
   logger.error({
     message: err.message,
     stack: err.stack,
@@ -46,7 +41,7 @@ export function errorHandler(
   // Handle Prisma errors
   if (err.name === 'PrismaClientKnownRequestError') {
     const prismaError = err as { code: string; meta?: { target?: string[] } };
-    
+
     if (prismaError.code === 'P2002') {
       res.status(409).json({
         success: false,

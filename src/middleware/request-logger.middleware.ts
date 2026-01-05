@@ -28,7 +28,7 @@ export function requestLogger(req: Request, res: Response, next: NextFunction): 
   // Log response on finish
   res.on('finish', () => {
     const duration = Date.now() - startTime;
-    
+
     logger.info({
       requestId,
       method: req.method,
