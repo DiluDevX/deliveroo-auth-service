@@ -1,5 +1,6 @@
 import jwt, { JwtPayload, SignOptions } from 'jsonwebtoken';
 import { config } from '../config';
+import { StringValue } from 'ms';
 
 export interface TokenPayload extends JwtPayload {
   userId: string;
@@ -14,14 +15,14 @@ export interface RefreshTokenPayload extends JwtPayload {
 
 export function generateAccessToken(payload: Omit<TokenPayload, 'iat' | 'exp'>): string {
   const options: SignOptions = {
-    expiresIn: config.jwt.expiresIn,
+    expiresIn: config.jwt.expiresIn as StringValue,
   };
   return jwt.sign(payload, config.jwt.secret, options);
 }
 
 export function generateRefreshToken(payload: Omit<RefreshTokenPayload, 'iat' | 'exp'>): string {
   const options: SignOptions = {
-    expiresIn: config.jwt.refreshExpiresIn,
+    expiresIn: config.jwt.refreshExpiresIn as StringValue,
   };
   return jwt.sign(payload, config.jwt.secret, options);
 }

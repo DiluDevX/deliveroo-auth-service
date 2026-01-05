@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, RequestHandler } from 'express';
 import { prisma } from '../config/database';
 
 const router = Router();
@@ -13,13 +13,13 @@ const router = Router();
  *       200:
  *         description: Service is healthy
  */
-router.get('/', (_req: Request, res: Response) => {
+router.get('/', ((_req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
     service: process.env.SERVICE_NAME || 'microservice',
   });
-});
+}) as RequestHandler);
 
 /**
  * @swagger
@@ -33,7 +33,7 @@ router.get('/', (_req: Request, res: Response) => {
  *       503:
  *         description: Service is not ready
  */
-router.get('/ready', async (_req: Request, res: Response) => {
+router.get('/ready', (async (_req, res) => {
   try {
     // Check database connection
     await prisma.$queryRaw`SELECT 1`;
@@ -55,7 +55,7 @@ router.get('/ready', async (_req: Request, res: Response) => {
       error: error instanceof Error ? error.message : 'Unknown error',
     });
   }
-});
+}) as RequestHandler);
 
 /**
  * @swagger
@@ -67,11 +67,11 @@ router.get('/ready', async (_req: Request, res: Response) => {
  *       200:
  *         description: Service is alive
  */
-router.get('/live', (_req: Request, res: Response) => {
+router.get('/live', ((_req, res) => {
   res.json({
     status: 'alive',
     timestamp: new Date().toISOString(),
   });
-});
+}) as RequestHandler);
 
 export { router as healthRoutes };

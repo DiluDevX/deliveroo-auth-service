@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { RequestHandler, ErrorRequestHandler } from 'express';
 import cors from 'cors';
 import { config } from './config';
 import { connectDatabase, disconnectDatabase } from './config/database';
@@ -6,8 +6,9 @@ import { logger } from './utils/logger';
 import { errorHandler } from './middleware/error-handler.middleware';
 import { requestLogger } from './middleware/request-logger.middleware';
 import { healthRoutes } from './routes/health.routes';
-import { exampleRoutes } from './routes/example.routes';
 import { setupSwagger } from './swagger';
+
+import authRoutes from './routes/auth.routes';
 
 const app = express();
 
@@ -17,17 +18,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Request logging
-app.use(requestLogger);
+app.use(requestLogger as RequestHandler);
 
 // Routes
 app.use('/health', healthRoutes);
-app.use('/api/v1/examples', exampleRoutes);
-
+app.use('/auth', authRoutes);
 // API Documentation
 setupSwagger(app);
 
 // Error handling (must be last)
-app.use(errorHandler);
+app.use(errorHandler as ErrorRequestHandler);
 
 // Graceful shutdown
 const gracefulShutdown = async (signal: string) => {
@@ -51,7 +51,7 @@ const startServer = async () => {
       logger.info(`API Docs available at http://localhost:${config.port}/api-docs`);
     });
   } catch (error) {
-    logger.error('Failed to start server', error);
+    console.error('Failed to start server', error);
     process.exit(1);
   }
 };

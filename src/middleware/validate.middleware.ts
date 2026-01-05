@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { ZodSchema, ZodError } from 'zod';
 import { ValidationError } from '../utils/errors';
 
@@ -8,7 +8,7 @@ type ValidationTarget = 'body' | 'query' | 'params';
  * Creates a validation middleware for the specified target using a Zod schema.
  */
 function createValidator(target: ValidationTarget) {
-  return <T>(schema: ZodSchema<T>) => {
+  return (schema: ZodSchema): RequestHandler => {
     return (req: Request, _res: Response, next: NextFunction): void => {
       try {
         const result = schema.parse(req[target]);
