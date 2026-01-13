@@ -17,7 +17,7 @@ router.get('/', ((_req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    service: process.env.SERVICE_NAME || 'microservice',
+    service: process.env.SERVICE_NAME || 'auth-microservice',
   });
 }) as RequestHandler);
 

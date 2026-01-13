@@ -7,6 +7,7 @@ import { errorHandler } from './middleware/error-handler.middleware';
 import { requestLogger } from './middleware/request-logger.middleware';
 import { healthRoutes } from './routes/health.routes';
 import { setupSwagger } from './swagger';
+import { apiKeyMiddleware } from './middleware/api-key.middleware';
 
 import authRoutes from './routes/auth.routes';
 
@@ -20,9 +21,8 @@ app.use(express.urlencoded({ extended: true }));
 // Request logging
 app.use(requestLogger as RequestHandler);
 
-// Routes
-app.use('/health', healthRoutes);
-app.use('/auth', authRoutes);
+app.use('/api', healthRoutes);
+app.use('/api/auth', apiKeyMiddleware, authRoutes);
 // API Documentation
 setupSwagger(app);
 
