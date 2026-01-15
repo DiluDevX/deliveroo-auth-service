@@ -1,6 +1,8 @@
 import { Router, RequestHandler } from 'express';
 import { connectDatabase } from '../config/database';
 import { version } from '../../package.json';
+import { healthRateLimiter } from '../middleware/rate-limit.middleware';
+
 const router = Router();
 
 /**
@@ -33,7 +35,7 @@ const router = Router();
  *                   type: string
  *                   example: 1.0.0
  */
-router.get('/', async (_req, res) => {
+router.get('/', healthRateLimiter, async (_req, res) => {
   let dbHealth = 'disconnected';
   try {
     await connectDatabase();

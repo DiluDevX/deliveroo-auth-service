@@ -48,6 +48,7 @@ const startServer = async () => {
 
     app.listen(config.port, () => {
       logger.info(`Server running on port ${config.port}`);
+      logger.info(`Health endpoint available at http://localhost:${config.port}/health`);
       logger.info(`API Docs available at http://localhost:${config.port}/api-docs`);
     });
   } catch (error) {
