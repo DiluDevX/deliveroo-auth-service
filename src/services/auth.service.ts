@@ -198,3 +198,22 @@ export const resetPassword = async (token: string, newPassword: string) => {
 
   return { message: 'Password reset successful' };
 };
+export const validateAccessToken = async (token: string) => {
+  try {
+    const payload = verifyToken(token);
+
+    if (typeof payload.exp !== 'number' || payload.exp < Date.now() / 1000) {
+      return { valid: false, user: null };
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+    });
+    if (!user) {
+      return { valid: false, user: null };
+    }
+    return { valid: true, user: excludePassword(user) };
+  } catch {
+    return { valid: false, user: null };
+  }
+};

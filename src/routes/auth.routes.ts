@@ -289,4 +289,6 @@ router.post('/forgot-password', validateBody(forgotPasswordSchema), authControll
  */
 router.post('/reset-password', validateBody(resetPasswordSchema), authController.resetPassword);
 
+router.post('/me', authController.me);
+
 export default router;
