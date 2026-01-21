@@ -25,7 +25,7 @@ app.use(requestLogger as RequestHandler);
 // Routes
 app.use('/health', healthRoutes);
 app.use('/auth', authRoutes);
-// API Documentation
+
 setupSwagger(app);
 
 // Error handling (must be last)
