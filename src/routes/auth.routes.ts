@@ -167,17 +167,13 @@ router.post('/login', validateBody(logInSchema), authController.login);
  *   post:
  *     summary: Refresh access token
  *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - refreshToken
- *             properties:
- *               refreshToken:
- *                 type: string
+ *     parameters:
+ *       - in: cookie
+ *         name: refreshToken
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Refresh token stored in HTTP-only cookie
  *     responses:
  *       200:
  *         description: Token refreshed successfully
