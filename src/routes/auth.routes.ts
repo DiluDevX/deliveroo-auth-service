@@ -102,10 +102,6 @@ router.post('/check-email', validateBody(checkEmailSchema), authController.check
  *                 type: string
  *                 minLength: 6
  *                 maxLength: 100
- *               role:
- *                 type: string
- *                 enum: [admin, user]
- *                 default: user
  *     responses:
  *       201:
  *         description: User registered successfully

@@ -125,7 +125,7 @@ export const refresh = async (data: RefreshTokenInput) => {
   }
 
   const user = await prisma.user.findUnique({
-    where: { id: storedToken.id },
+    where: { id: storedToken.userId },
   });
   if (!user) {
     throw new UnauthorizedError('Invalid or expired refresh token');
