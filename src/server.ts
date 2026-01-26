@@ -1,4 +1,4 @@
-import express, { RequestHandler, ErrorRequestHandler } from 'express';
+import express, { ErrorRequestHandler, RequestHandler } from 'express';
 import cors from 'cors';
 import { config } from './config';
 import { connectDatabase, disconnectDatabase } from './config/database';
@@ -10,6 +10,7 @@ import { setupSwagger } from './swagger';
 import { apiKeyMiddleware } from './middleware/api-key.middleware';
 
 import authRoutes from './routes/auth.routes';
+import cookieParser from 'cookie-parser';
 
 const app = express();
 
