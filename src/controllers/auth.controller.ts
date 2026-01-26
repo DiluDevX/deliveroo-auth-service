@@ -2,6 +2,22 @@ import { Request, Response, NextFunction } from 'express';
 import asyncHandler from 'express-async-handler';
 import * as authService from '../services/auth.service';
 
+const setAuthCookies = (res: Response, accessToken: string, refreshToken: string) => {
+  res.cookie('accessToken', accessToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'strict',
+    maxAge: 15 * 60 * 1000,
+  });
+
+  res.cookie('refreshToken', refreshToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'strict',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+};
+
 export const checkEmail = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const response = await authService.checkEmail(req.body.email);
@@ -28,39 +44,13 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
   const { user, accessToken, refreshToken } = await authService.login(req.body);
-
-  res.cookie('accessToken', accessToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'strict',
-    maxAge: 15 * 60 * 1000,
-  });
-
-  res.cookie('refreshToken', refreshToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'strict',
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
+  setAuthCookies(res, accessToken, refreshToken);
   res.status(200).json({ user });
 });
 
 export const refreshToken = asyncHandler(async (req: Request, res: Response) => {
   const { accessToken, refreshToken } = await authService.refresh(req.cookies.refreshToken);
-
-  res.cookie('accessToken', accessToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'strict',
-    maxAge: 15 * 60 * 1000,
-  });
-
-  res.cookie('refreshToken', refreshToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'strict',
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
+  setAuthCookies(res, accessToken, refreshToken);
   res.status(200).json();
 });
 
