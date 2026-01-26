@@ -17,6 +17,7 @@ interface Config {
   logging: {
     level: string;
   };
+  authApiKey: string;
 }
 
 function requireEnv(name: string): string {
@@ -32,7 +33,7 @@ function optionalEnv(name: string, defaultValue: string): string {
 }
 
 export const config: Config = {
-  port: parseInt(optionalEnv('PORT', '3000'), 10),
+  port: Number.parseInt(optionalEnv('PORT', '3000'), 10),
   nodeEnv: optionalEnv('NODE_ENV', 'development'),
   databaseUrl: requireEnv('DATABASE_URL'),
   jwt: {
@@ -47,6 +48,7 @@ export const config: Config = {
   logging: {
     level: optionalEnv('LOG_LEVEL', 'info'),
   },
+  authApiKey: requireEnv('AUTH_API_KEY'),
 };
 
 export const isDevelopment = config.nodeEnv === 'development';

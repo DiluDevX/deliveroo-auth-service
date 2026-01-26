@@ -27,8 +27,22 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const response = await authService.login(req.body);
-    res.status(200).json(response);
+    const { user, accessToken, refreshToken } = await authService.login(req.body);
+
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 15 * 60 * 1000,
+    });
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+    res.status(200).json({ user });
   } catch (error) {
     next(error);
   }
@@ -36,8 +50,22 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
 export const refreshToken = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const response = await authService.refresh(req.body);
-    res.status(200).json(response);
+    const { accessToken, refreshToken } = await authService.refresh(req.cookies.refreshToken);
+
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 15 * 60 * 1000,
+    });
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+    res.status(200).json();
   } catch (error) {
     next(error);
   }
@@ -63,4 +91,27 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
   } catch (error) {
     next(error);
   }
+};
+
+export const me = async (req: Request, res: Response, next: NextFunction) => {
+  try{
+    const token: string = req.cookies.accessToken;
+
+    if (!token) {
+      return res.status(401).json({ valid: false, user: null });
+    }
+
+    const result = await authService.validateAccessToken(token);
+
+    if (result.valid) {
+      return res.status(200).json({ valid: true, user: result.user });
+    } else {
+      return res.status(401).json({ valid: false, user: result.user || null });
+    }
+  }
+  catch (e) {
+    next(e);
+  }
+
+
 };
