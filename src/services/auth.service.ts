@@ -128,8 +128,27 @@ export const refresh = async (data: RefreshTokenInput) => {
     email: payload.email,
     role: payload.role,
   });
+  const refreshToken = generateRefreshToken({
+    userId: payload.id,
+    firstName: payload.firstName,
+    lastName: payload.lastName,
+    email: payload.email,
+    role: payload.role,
+  });
 
-  return { accessToken };
+  await prisma.refreshToken.delete({
+    where: { token: data.refreshToken },
+  });
+
+  await prisma.refreshToken.create({
+    data: {
+      token: refreshToken,
+      userId: payload.userId,
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    },
+  });
+
+  return { accessToken, refreshToken };
 };
 
 export const forgotPassword = async (email: string) => {
