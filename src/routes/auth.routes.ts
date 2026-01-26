@@ -288,6 +288,28 @@ router.post('/forgot-password', validateBody(forgotPasswordSchema), authControll
  */
 router.post('/reset-password', validateBody(resetPasswordSchema), authController.resetPassword);
 
+
+/**
+ * @swagger
+ * /auth/me:
+ *   post:
+ *     summary: Authenticated user info
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userName:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Authenticated user
+ *       400:
+ *         description: User not Authorized
+ */
 router.post('/me', authController.me);
 
 export default router;
