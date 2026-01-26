@@ -6,7 +6,6 @@ import {
   logInSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
-  refreshTokenSchema,
   checkEmailSchema,
 } from '../schema/auth.schema';
 
@@ -232,7 +231,7 @@ router.post('/login', validateBody(logInSchema), authController.login);
  *       401:
  *         description: Invalid or expired refresh token
  */
-router.post('/refresh', validateBody(refreshTokenSchema), authController.refreshToken);
+router.post('/refresh', authController.refreshToken);
 
 /**
  * @swagger
@@ -288,5 +287,29 @@ router.post('/forgot-password', validateBody(forgotPasswordSchema), authControll
  *         description: Invalid or expired token
  */
 router.post('/reset-password', validateBody(resetPasswordSchema), authController.resetPassword);
+
+
+/**
+ * @swagger
+ * /auth/me:
+ *   post:
+ *     summary: Authenticated user info
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userName:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Authenticated user
+ *       400:
+ *         description: User not Authorized
+ */
+router.post('/me', authController.me);
 
 export default router;
