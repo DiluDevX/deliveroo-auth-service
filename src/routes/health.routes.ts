@@ -1,7 +1,18 @@
-import { Router, RequestHandler } from 'express';
+import { Router} from 'express';
+import rateLimit from 'express-rate-limit';
 import { connectDatabase } from '../config/database';
 import { version } from '../../package.json';
+
 const router = Router();
+
+// Rate limiter: 10 requests per minute
+const rateLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // limit each IP to 10 requests per minute
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 /**
  * @swagger
@@ -33,7 +44,7 @@ const router = Router();
  *                   type: string
  *                   example: 1.0.0
  */
-router.get('/', async (_req, res) => {
+router.get('/', rateLimiter, async (_req, res) => {
   let dbHealth = 'disconnected';
   try {
     await connectDatabase();
@@ -48,6 +59,5 @@ router.get('/', async (_req, res) => {
     db: dbHealth,
     version,
   });
-}) as RequestHandler;
-
+})
 export const healthRoutes = router;
