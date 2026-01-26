@@ -89,17 +89,25 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
   }
 };
 
-export const me = async (req: Request, res: Response) => {
-  const token = req.cookies.accessToken;
-  if (!token) {
-    return res.status(401).json({ valid: false, user: null });
+export const me = async (req: Request, res: Response, next: NextFunction) => {
+  try{
+    const token: string = req.cookies.accessToken;
+
+    if (!token) {
+      return res.status(401).json({ valid: false, user: null });
+    }
+
+    const result = await authService.validateAccessToken(token);
+
+    if (result.valid) {
+      return res.status(200).json({ valid: true, user: result.user });
+    } else {
+      return res.status(401).json({ valid: false, user: result.user || null });
+    }
+  }
+  catch (e) {
+    next(e);
   }
 
-  const result = await authService.validateAccessToken(token);
 
-  if (result.valid) {
-    return res.status(200).json({ valid: true, user: result.user });
-  } else {
-    return res.status(401).json({ valid: false, user: result.user || null });
-  }
 };
