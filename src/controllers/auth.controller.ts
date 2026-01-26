@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import asyncHandler from 'express-async-handler';
 import * as authService from '../services/auth.service';
 
 export const checkEmail = async (req: Request, res: Response, next: NextFunction) => {
@@ -25,73 +26,57 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
   }
 };
 
-export const login = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { user, accessToken, refreshToken } = await authService.login(req.body);
+export const login = asyncHandler(async (req: Request, res: Response) => {
+  const { user, accessToken, refreshToken } = await authService.login(req.body);
 
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: 15 * 60 * 1000,
-    });
+  res.cookie('accessToken', accessToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'strict',
+    maxAge: 15 * 60 * 1000,
+  });
 
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-    res.status(200).json({ user });
-  } catch (error) {
-    next(error);
-  }
-};
+  res.cookie('refreshToken', refreshToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'strict',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+  res.status(200).json({ user });
+});
 
-export const refreshToken = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { accessToken, refreshToken } = await authService.refresh(req.cookies.refreshToken);
+export const refreshToken = asyncHandler(async (req: Request, res: Response) => {
+  const { accessToken, refreshToken } = await authService.refresh(req.cookies.refreshToken);
 
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: 15 * 60 * 1000,
-    });
+  res.cookie('accessToken', accessToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'strict',
+    maxAge: 15 * 60 * 1000,
+  });
 
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-    res.status(200).json();
-  } catch (error) {
-    next(error);
-  }
-};
+  res.cookie('refreshToken', refreshToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'strict',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+  res.status(200).json();
+});
 
-export const forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const response = await authService.forgotPassword(req.body.email);
-    res.status(200).json(response);
-  } catch (error) {
-    next(error);
-  }
-};
+export const forgotPassword = asyncHandler(async (req: Request, res: Response) => {
+  const response = await authService.forgotPassword(req.body.email);
+  res.status(200).json(response);
+});
 
-export const resetPassword = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const response = await authService.resetPassword(
-      req.body.email,
-      req.body.token,
-      req.body.password
-    );
-    res.status(200).json(response);
-  } catch (error) {
-    next(error);
-  }
-};
+export const resetPassword = asyncHandler(async (req: Request, res: Response) => {
+  const response = await authService.resetPassword(
+    req.body.email,
+    req.body.token,
+    req.body.password
+  );
+  res.status(200).json(response);
+});
 
 export const me = async (req: Request, res: Response, next: NextFunction) => {
   try{
