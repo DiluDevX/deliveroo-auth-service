@@ -32,10 +32,11 @@ export const checkEmailSchema = z.object({
 });
 
 export const forgotPasswordSchema = z.object({
-  userName: z.string().min(1, 'Username is required'),
+  email: emailSchema,
 });
 
 export const resetPasswordSchema = z.object({
+  email: emailSchema,
   token: z.string().min(1, 'Token is required'),
   password: createPasswordSchema,
 });
