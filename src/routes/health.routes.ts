@@ -45,7 +45,7 @@ const rateLimiter = rateLimit({
  *                   example: 1.0.0
  */
 router.get('/', rateLimiter, async (_req, res) => {
-  let dbHealth = 'disconnected';
+  let dbHealth;
   try {
     await connectDatabase();
     dbHealth = 'connected';
