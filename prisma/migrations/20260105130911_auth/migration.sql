@@ -11,16 +11,31 @@
 BEGIN;
 CREATE TYPE "Role_new" AS ENUM ('user', 'admin');
 ALTER TABLE "public"."User" ALTER COLUMN "role" DROP DEFAULT;
-ALTER TABLE "User" ALTER COLUMN "role" TYPE "Role_new" USING ("role"::text::"Role_new");
+ALTER TABLE "User" ALTER COLUMN "role" TYPE "Role_new" USING (lower("role"::text)::"Role_new");
 ALTER TYPE "Role" RENAME TO "Role_old";
 ALTER TYPE "Role_new" RENAME TO "Role";
 DROP TYPE "public"."Role_old";
 ALTER TABLE "User" ALTER COLUMN "role" SET DEFAULT 'user';
 COMMIT;
 
--- AlterTable
-ALTER TABLE "User" DROP COLUMN "name",
-ADD COLUMN     "firstName" TEXT NOT NULL,
-ADD COLUMN     "lastName" TEXT NOT NULL,
-ADD COLUMN     "phone" TEXT,
-ALTER COLUMN "role" SET DEFAULT 'user';
+-- AlterTable: Add nullable columns first
+ALTER TABLE "User"
+    ADD COLUMN "firstName" TEXT,
+ADD COLUMN "lastName" TEXT,
+ADD COLUMN "phone" TEXT;
+
+-- Backfill firstName and lastName from name column
+UPDATE "User"
+SET "firstName" = COALESCE(NULLIF(split_part("name", ' ', 1), ''), 'Unknown'),
+    "lastName"  = COALESCE(NULLIF(regexp_replace("name", '^[^\s]+\s*', ''), ''), 'User')
+WHERE "firstName" IS NULL
+   OR "lastName" IS NULL;
+
+-- Make firstName and lastName NOT NULL
+ALTER TABLE "User"
+    ALTER COLUMN "firstName" SET NOT NULL,
+ALTER
+COLUMN "lastName" SET NOT NULL;
+
+-- Drop the old name column
+ALTER TABLE "User" DROP COLUMN "name";

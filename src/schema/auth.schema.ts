@@ -19,7 +19,6 @@ export const signUpSchema = z.object({
   email: emailSchema,
   phone: z.string().optional(),
   password: createPasswordSchema,
-  role: z.enum(['admin', 'user']).default('user'),
 });
 
 export const logInSchema = z.object({

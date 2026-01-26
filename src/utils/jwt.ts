@@ -1,6 +1,7 @@
 import jwt, { JwtPayload, SignOptions } from 'jsonwebtoken';
 import { config } from '../config';
 import { StringValue } from 'ms';
+import crypto from 'crypto';
 
 export interface TokenPayload extends JwtPayload {
   userId: string;
@@ -33,4 +34,8 @@ export function verifyToken<T extends JwtPayload>(token: string): T {
 
 export function decodeToken<T extends JwtPayload>(token: string): T | null {
   return jwt.decode(token) as T | null;
+}
+
+export function hashToken(token: string): string {
+  return crypto.createHash('sha256').update(token).digest('hex');
 }

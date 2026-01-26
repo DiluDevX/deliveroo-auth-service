@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import * as authService from '../services/auth.service';
 
@@ -27,7 +27,7 @@ export const checkEmail = async (req: Request, res: Response, next: NextFunction
       return;
     }
 
-    res.status(200).json(response.user);
+    res.status(200).json({ exist: true, user: response.user });
   } catch (error) {
     next(error);
   }
@@ -51,7 +51,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 export const refreshToken = asyncHandler(async (req: Request, res: Response) => {
   const { accessToken, refreshToken } = await authService.refresh(req.cookies.refreshToken);
   setAuthCookies(res, accessToken, refreshToken);
-  res.status(200).json();
+  res.status(200).json({ message: 'Token refreshed successfully' });
 });
 
 export const forgotPassword = asyncHandler(async (req: Request, res: Response) => {
@@ -60,16 +60,12 @@ export const forgotPassword = asyncHandler(async (req: Request, res: Response) =
 });
 
 export const resetPassword = asyncHandler(async (req: Request, res: Response) => {
-  const response = await authService.resetPassword(
-    req.body.email,
-    req.body.token,
-    req.body.password
-  );
+  const response = await authService.resetPassword(req.body.token, req.body.password);
   res.status(200).json(response);
 });
 
 export const me = async (req: Request, res: Response, next: NextFunction) => {
-  try{
+  try {
     const token: string = req.cookies.accessToken;
 
     if (!token) {
@@ -83,10 +79,7 @@ export const me = async (req: Request, res: Response, next: NextFunction) => {
     } else {
       return res.status(401).json({ valid: false, user: result.user || null });
     }
-  }
-  catch (e) {
+  } catch (e) {
     next(e);
   }
-
-
 };

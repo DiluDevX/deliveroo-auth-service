@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { AppError, ValidationError } from '../utils/errors';
 import { logger } from '../utils/logger';
 import { isProduction } from '../config';
@@ -44,11 +44,13 @@ export function errorHandler(err: Error, _req: Request, res: Response, _next: Ne
     const prismaError = err as Prisma.PrismaClientKnownRequestError;
 
     if (prismaError.code === 'P2002') {
+      const target = prismaError.meta?.target;
+      const field = Array.isArray(target) ? target[0] : target;
       res.status(409).json({
         success: false,
         message: 'A record with this value already exists',
         code: 'DUPLICATE_ENTRY',
-        field: prismaError.meta?.target as string,
+        field: field,
       });
       return;
     }

@@ -1,8 +1,8 @@
 import { prisma } from '../config/database';
-import { hashPassword, comparePasswords } from '../utils/password';
-import { generateAccessToken, generateRefreshToken, verifyToken } from '../utils/jwt';
-import { SignUpInput, LogInInput, RefreshTokenInput } from '../schema/auth.schema';
-import { BadRequestError, UnauthorizedError, ConflictError } from '../utils/errors';
+import { comparePasswords, hashPassword } from '../utils/password';
+import { generateAccessToken, generateRefreshToken, hashToken, verifyToken } from '../utils/jwt';
+import { LogInInput, RefreshTokenInput, SignUpInput } from '../schema/auth.schema';
+import { BadRequestError, ConflictError, UnauthorizedError } from '../utils/errors';
 import crypto from 'node:crypto';
 import { User } from '../types/global';
 
@@ -45,31 +45,28 @@ export const signup = async (data: SignUpInput) => {
       email: data.email,
       phone: data.phone,
       password: hashedPassword,
-      role: data.role,
     },
   });
 
-  const accessToken = generateAccessToken({ userId: user.id, email: user.email, role: user.role });
   const refreshToken = generateRefreshToken({
     userId: user.id,
     firstName: user.firstName,
     lastName: user.lastName,
     email: user.email,
-    role: user.role,
   });
+
+  const hashedRefreshToken = hashToken(refreshToken);
 
   await prisma.refreshToken.create({
     data: {
-      token: refreshToken,
+      token: hashedRefreshToken,
       userId: user.id,
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     },
   });
 
   return {
-    user: excludePassword(user),
-    token: accessToken,
-    refreshToken,
+    message: 'User created successfully',
   };
 };
 
@@ -97,9 +94,11 @@ export const login = async (data: LogInInput) => {
     role: user.role,
   });
 
+  const hashedRefreshToken = hashToken(refreshToken);
+
   await prisma.refreshToken.create({
     data: {
-      token: refreshToken,
+      token: hashedRefreshToken,
       userId: user.id,
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     },
@@ -115,34 +114,45 @@ export const login = async (data: LogInInput) => {
 export const refresh = async (data: RefreshTokenInput) => {
   const payload = verifyToken(data);
 
+  const hashedRefreshToken = hashToken(data);
+
   const storedToken = await prisma.refreshToken.findUnique({
-    where: { token: data },
+    where: { token: hashedRefreshToken },
   });
 
   if (!storedToken || storedToken.expiresAt < new Date()) {
     throw new UnauthorizedError('Invalid or expired refresh token');
   }
 
+  const user = await prisma.user.findUnique({
+    where: { id: storedToken.id },
+  });
+  if (!user) {
+    throw new UnauthorizedError('Invalid or expired refresh token');
+  }
+
   const accessToken = generateAccessToken({
-    userId: payload.userId,
-    email: payload.email,
-    role: payload.role,
+    userId: user.id,
+    email: user.email,
+    role: user.role,
   });
   const refreshToken = generateRefreshToken({
-    userId: payload.id,
-    firstName: payload.firstName,
-    lastName: payload.lastName,
-    email: payload.email,
-    role: payload.role,
+    userId: user.id,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.email,
+    role: user.role,
   });
 
+  const newHashedRefreshToken = hashToken(refreshToken);
+
   await prisma.refreshToken.delete({
-    where: { token: data },
+    where: { token: hashedRefreshToken },
   });
 
   await prisma.refreshToken.create({
     data: {
-      token: refreshToken,
+      token: newHashedRefreshToken,
       userId: payload.userId,
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     },
@@ -161,10 +171,11 @@ export const forgotPassword = async (email: string) => {
   }
 
   const token = crypto.randomBytes(32).toString('hex');
+  const hashedToken = hashToken(token);
 
   await prisma.passwordReset.create({
     data: {
-      token,
+      token: hashedToken,
       userId: user.id,
       expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
     },
@@ -177,30 +188,41 @@ export const forgotPassword = async (email: string) => {
 
 export const sendResetPasswordEmail = async (token: string, email: string) => {
   try {
-    await fetch(`${process.env.MAIL_SERVICE_URL}/send-reset-password-email`, {
+    if (typeof fetch !== 'function') {
+      console.error('Global fetch is not available. Use Node 18+ or add a fetch polyfill.');
+      return { message: 'Something went wrong.' };
+    }
+    const mailServiceUrl = process.env.MAIL_SERVICE_URL;
+    if (!mailServiceUrl) {
+      console.error('MAIL_SERVICE_URL is not set');
+      return { message: 'Something went wrong.' };
+    }
+    const res = await fetch(`${process.env.MAIL_SERVICE_URL}/send-reset-password-email`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ token, email }),
     });
+    if (!res.ok) {
+      console.error(`Failed to send email: ${res.status} ${res.statusText}`);
+      return { message: 'Something went wrong.' };
+    }
     return { message: 'If the email exists, a reset link will be sent' };
   } catch {
     return { message: 'Something went wrong.' };
   }
 };
 
-export const resetPassword = async (email: string, token: string, newPassword: string) => {
+export const resetPassword = async (token: string, newPassword: string) => {
+  const hashedToken = hashToken(token);
+
   const resetRecord = await prisma.passwordReset.findUnique({
-    where: { token } ,
+    where: { token: hashedToken },
   });
 
-  const user = await prisma.user.findUnique({
-    where: { email },
-  })
-
-  if (!resetRecord || resetRecord.expiresAt < new Date() || !user || user.id !== resetRecord.userId) {
-    throw new BadRequestError('Invalid or expired reset token');
+  if (!resetRecord || resetRecord.expiresAt < new Date()) {
+    throw new BadRequestError('Invalid email or reset token');
   }
 
   const hashedPassword = await hashPassword(newPassword);
@@ -212,7 +234,7 @@ export const resetPassword = async (email: string, token: string, newPassword: s
 
   // Delete used token
   await prisma.passwordReset.delete({
-    where: { token },
+    where: { token: hashedToken },
   });
 
   return { message: 'Password reset successful' };
