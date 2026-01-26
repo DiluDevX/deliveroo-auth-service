@@ -27,7 +27,7 @@ export const checkEmail = async (req: Request, res: Response, next: NextFunction
       return;
     }
 
-    res.status(200).json({ exist: true, user: response.user });
+    res.status(200).json({ exists: true, user: response.user });
   } catch (error) {
     next(error);
   }

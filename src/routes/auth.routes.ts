@@ -104,35 +104,7 @@ router.post('/check-email', validateBody(checkEmailSchema), authController.check
  *                 maxLength: 100
  *     responses:
  *       201:
- *         description: User registered successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 user:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                     firstName:
- *                       type: string
- *                     lastName:
- *                       type: string
- *                     email:
- *                       type: string
- *                     phone:
- *                       type: string
- *                     createdAt:
- *                       type: string
- *                       format: date-time
- *                     updatedAt:
- *                       type: string
- *                       format: date-time
- *                 accessToken:
- *                   type: string
- *                 refreshToken:
- *                   type: string
+ *         description: User created successfully
  *       400:
  *         description: Validation error
  *       409:
@@ -215,8 +187,9 @@ router.post('/login', validateBody(logInSchema), authController.login);
  *               type: array
  *               items:
  *                 type: string
- *                 example: accessToken=eyJhbG...; HttpOnly; Secure; SameSite=Strict
- *                 -refreshToken=eyJhbG...; HttpOnly; Secure; SameSite=Strict
+ *                 example:
+ *                 - accessToken=eyJhbG...; HttpOnly; Secure; SameSite=Strict
+ *                 - refreshToken=eyJhbG...; HttpOnly; Secure; SameSite=Strict
  *         content:
  *           application/json:
  *             schema:
