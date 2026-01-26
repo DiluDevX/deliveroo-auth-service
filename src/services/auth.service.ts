@@ -113,10 +113,10 @@ export const login = async (data: LogInInput) => {
 };
 
 export const refresh = async (data: RefreshTokenInput) => {
-  const payload = verifyToken(data.refreshToken);
+  const payload = verifyToken(data);
 
   const storedToken = await prisma.refreshToken.findUnique({
-    where: { token: data.refreshToken },
+    where: { token: data },
   });
 
   if (!storedToken || storedToken.expiresAt < new Date()) {
@@ -137,7 +137,7 @@ export const refresh = async (data: RefreshTokenInput) => {
   });
 
   await prisma.refreshToken.delete({
-    where: { token: data.refreshToken },
+    where: { token: data },
   });
 
   await prisma.refreshToken.create({

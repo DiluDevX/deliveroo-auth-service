@@ -6,7 +6,6 @@ import {
   logInSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
-  refreshTokenSchema,
   checkEmailSchema,
 } from '../schema/auth.schema';
 
@@ -232,7 +231,7 @@ router.post('/login', validateBody(logInSchema), authController.login);
  *       401:
  *         description: Invalid or expired refresh token
  */
-router.post('/refresh', validateBody(refreshTokenSchema), authController.refreshToken);
+router.post('/refresh', authController.refreshToken);
 
 /**
  * @swagger
