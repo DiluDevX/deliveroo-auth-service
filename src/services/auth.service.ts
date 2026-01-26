@@ -170,17 +170,36 @@ export const forgotPassword = async (email: string) => {
     },
   });
 
-  // TODO: Send email with reset link
-  // return token for now!
-  return { message: 'Reset link sent', token };
+  await sendResetPasswordEmail(token, email);
+
+  return { message: 'Reset link sent' };
 };
 
-export const resetPassword = async (token: string, newPassword: string) => {
+export const sendResetPasswordEmail = async (token: string, email: string) => {
+  try {
+    await fetch(`${process.env.MAIL_SERVICE_URL}/send-reset-password-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token, email }),
+    });
+    return { message: 'If the email exists, a reset link will be sent' };
+  } catch {
+    return { message: 'Something went wrong.' };
+  }
+};
+
+export const resetPassword = async (email: string, token: string, newPassword: string) => {
   const resetRecord = await prisma.passwordReset.findUnique({
-    where: { token },
+    where: { token } ,
   });
 
-  if (!resetRecord || resetRecord.expiresAt < new Date()) {
+  const user = await prisma.user.findUnique({
+    where: { email },
+  })
+
+  if (!resetRecord || resetRecord.expiresAt < new Date() || !user || user.id !== resetRecord.userId) {
     throw new BadRequestError('Invalid or expired reset token');
   }
 
