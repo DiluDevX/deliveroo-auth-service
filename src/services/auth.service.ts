@@ -176,13 +176,18 @@ export const forgotPassword = async (email: string) => {
 };
 
 export const sendResetPasswordEmail = async (token: string, email: string) => {
-  await fetch(`${process.env.MAIL_SERVICE_URL}/send-reset-password-email`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ token, email }),
-  });
+  try {
+    await fetch(`${process.env.MAIL_SERVICE_URL}/send-reset-password-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token, email }),
+    });
+    return { message: 'If the email exists, a reset link will be sent' };
+  } catch {
+    return { message: 'Something went wrong.' };
+  }
 };
 
 export const resetPassword = async (email: string, token: string, newPassword: string) => {
