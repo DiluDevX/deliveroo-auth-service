@@ -4,11 +4,9 @@ import { verifyToken, TokenPayload } from '../utils/jwt';
 import { config } from '../config';
 import { logger } from '../utils/logger';
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: TokenPayload;
-    }
+declare module 'express' {
+  interface Request {
+    user?: TokenPayload;
   }
 }
 

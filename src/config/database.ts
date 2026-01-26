@@ -2,7 +2,6 @@ import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
 
 declare global {
-  // eslint-disable-next-line no-var
   var prisma: PrismaClient | undefined;
 }
 
@@ -18,7 +17,7 @@ export async function connectDatabase(): Promise<void> {
     await prisma.$connect();
     logger.info('Database connected successfully');
   } catch (error) {
-    logger.error('Failed to connect to database', error);
+    console.error('Failed to connect to database', error);
     throw error;
   }
 }

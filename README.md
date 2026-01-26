@@ -59,6 +59,7 @@ yarn dev
 ```
 
 Visit:
+
 - API: http://localhost:3000
 - Swagger Docs: http://localhost:3000/api-docs
 - Health Check: http://localhost:3000/health
@@ -88,18 +89,18 @@ Visit:
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `yarn dev` | Start development server with hot reload |
-| `yarn build` | Compile TypeScript to `dist/` |
-| `yarn start` | Run compiled production build |
-| `yarn lint` | Run ESLint |
-| `yarn lint:fix` | Fix ESLint issues |
-| `yarn format:fix` | Format code with Prettier |
-| `yarn typecheck` | Run TypeScript type checking |
-| `yarn prisma:generate` | Generate Prisma client |
-| `yarn prisma:migrate` | Run database migrations |
-| `yarn prisma:studio` | Open Prisma Studio GUI |
+| Command                | Description                              |
+| ---------------------- | ---------------------------------------- |
+| `yarn dev`             | Start development server with hot reload |
+| `yarn build`           | Compile TypeScript to `dist/`            |
+| `yarn start`           | Run compiled production build            |
+| `yarn lint`            | Run ESLint                               |
+| `yarn lint:fix`        | Fix ESLint issues                        |
+| `yarn format:fix`      | Format code with Prettier                |
+| `yarn typecheck`       | Run TypeScript type checking             |
+| `yarn prisma:generate` | Generate Prisma client                   |
+| `yarn prisma:migrate`  | Run database migrations                  |
+| `yarn prisma:studio`   | Open Prisma Studio GUI                   |
 
 ## Customization Checklist
 
@@ -118,6 +119,7 @@ When creating a new service from this template:
 ### Prerequisites
 
 1. AWS Account with:
+
    - ECR repository created
    - ECS cluster and service configured
    - RDS PostgreSQL instance running
@@ -168,11 +170,11 @@ router.get('/', validateQuery(paginationSchema), handler);
 
 ## Health Checks
 
-| Endpoint | Purpose |
-|----------|---------|
-| `GET /health` | Basic health check |
+| Endpoint            | Purpose                       |
+| ------------------- | ----------------------------- |
+| `GET /health`       | Basic health check            |
 | `GET /health/ready` | Readiness (includes DB check) |
-| `GET /health/live` | Liveness probe |
+| `GET /health/live`  | Liveness probe                |
 
 ## License
 

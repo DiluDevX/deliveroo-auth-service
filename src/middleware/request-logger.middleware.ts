@@ -2,11 +2,9 @@ import { Request, Response, NextFunction } from 'express';
 import { logger } from '../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
 
-declare global {
-  namespace Express {
-    interface Request {
-      requestId: string;
-    }
+declare module 'express' {
+  interface Request {
+    requestId?: string;
   }
 }
 
@@ -28,7 +26,7 @@ export function requestLogger(req: Request, res: Response, next: NextFunction): 
   // Log response on finish
   res.on('finish', () => {
     const duration = Date.now() - startTime;
-    
+
     logger.info({
       requestId,
       method: req.method,
