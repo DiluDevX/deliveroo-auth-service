@@ -60,13 +60,13 @@ yarn dev
 
 Visit:
 
-- API: http://localhost:3000
-- Swagger Docs: http://localhost:3000/api-docs
-- Health Check: http://localhost:3000/health
+- API: <http://localhost:3000>
+- Swagger Docs: <http://localhost:3000/api-docs>
+- Health Check: <http://localhost:3000/health>
 
 ## Project Structure
 
-```
+```text
 ├── .aws/                    # AWS ECS task definitions
 ├── .github/workflows/       # CI/CD pipelines
 ├── prisma/
@@ -133,7 +133,7 @@ When creating a new service from this template:
 
 Update your `DATABASE_URL` to point to RDS:
 
-```
+```text
 postgresql://username:password@your-rds-endpoint.region.rds.amazonaws.com:5432/dbname?schema=public
 ```
 
