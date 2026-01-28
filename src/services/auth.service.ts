@@ -6,7 +6,7 @@ import { BadRequestError, ConflictError, UnauthorizedError } from '../utils/erro
 import crypto from 'node:crypto';
 import { User } from '../types/global';
 
-// Helper to exclude password from user object
+// Helper to exclude password from user
 const excludePassword = (user: User) => {
   const { password: _password, ...userWithoutPassword } = user;
   return userWithoutPassword;
@@ -197,7 +197,7 @@ export const sendResetPasswordEmail = async (token: string, email: string) => {
       console.error('MAIL_SERVICE_URL is not set');
       return { message: 'Something went wrong.' };
     }
-    const res = await fetch(`${process.env.MAIL_SERVICE_URL}/send-reset-password-email`, {
+    const res = await fetch(`${process.env.MAIL_SERVICE_URL}/api/mail/password-reset`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
