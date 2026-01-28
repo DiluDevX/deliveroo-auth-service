@@ -23,7 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 // Request logging
 app.use(requestLogger as RequestHandler);
 
-app.use('/api', healthRoutes);
+app.use(healthRoutes);
 app.use('/api/auth', apiKeyMiddleware, authRoutes);
 // API Documentation
 setupSwagger(app);
