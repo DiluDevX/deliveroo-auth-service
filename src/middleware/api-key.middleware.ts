@@ -3,7 +3,7 @@ import { config } from '../config';
 
 export function apiKeyMiddleware(req: Request, res: Response, next: NextFunction) {
   try {
-    const apiKey = req.header('auth-api-key');
+    const apiKey = req.header('api-key');
     if (!apiKey || apiKey !== config.authApiKey) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
