@@ -8,14 +8,14 @@ const setAuthCookies = (res: Response, accessToken: string, refreshToken: string
   res.cookie('accessToken', accessToken, {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? 'strict' : 'none',
+    sameSite: isProduction ? 'strict' : 'lax',
     maxAge: 15 * 60 * 1000,
   });
 
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? 'strict' : 'none',
+    sameSite: isProduction ? 'strict' : 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 };
@@ -48,6 +48,15 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   const { user, accessToken, refreshToken } = await authService.login(req.body);
   setAuthCookies(res, accessToken, refreshToken);
   res.status(200).json({ user });
+});
+
+export const logOut = asyncHandler(async (req: Request, res: Response) => {
+  const result = await authService.logOut(req.cookies.refreshToken);
+  if (result) {
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
+    res.status(200).json({ message: 'Logged out successfully' });
+  }
 });
 
 export const refreshToken = asyncHandler(async (req: Request, res: Response) => {

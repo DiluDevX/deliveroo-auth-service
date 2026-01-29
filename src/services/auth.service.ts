@@ -5,6 +5,7 @@ import { LogInInput, RefreshTokenInput, SignUpInput } from '../schema/auth.schem
 import { BadRequestError, ConflictError, UnauthorizedError } from '../utils/errors';
 import crypto from 'node:crypto';
 import { User } from '../types/global';
+import axios from 'axios';
 
 // Helper to exclude password from user
 const excludePassword = (user: User) => {
@@ -111,6 +112,13 @@ export const login = async (data: LogInInput) => {
   };
 };
 
+export const logOut = async (refreshToken: string) => {
+  await prisma.refreshToken.deleteMany({
+    where: { token: refreshToken },
+  });
+  return true;
+};
+
 export const refresh = async (data: RefreshTokenInput) => {
   const payload = verifyToken(data);
 
@@ -188,28 +196,34 @@ export const forgotPassword = async (email: string) => {
 
 export const sendResetPasswordEmail = async (token: string, email: string) => {
   try {
+    console.log('[sendResetPasswordEmail] Called with token:', token, 'email:', email);
     if (typeof fetch !== 'function') {
-      console.error('Global fetch is not available. Use Node 18+ or add a fetch polyfill.');
+      console.error(
+        '[sendResetPasswordEmail] Global fetch is not available. Use Node 18+ or add a fetch polyfill.'
+      );
       return { message: 'Something went wrong.' };
     }
     const mailServiceUrl = process.env.MAIL_SERVICE_URL;
     if (!mailServiceUrl) {
-      console.error('MAIL_SERVICE_URL is not set');
+      console.error('[sendResetPasswordEmail] MAIL_SERVICE_URL is not set');
       return { message: 'Something went wrong.' };
     }
-    const res = await fetch(`${process.env.MAIL_SERVICE_URL}/api/mail/password-reset`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ token, email }),
+    const url = `${process.env.MAIL_SERVICE_URL}/api/mail/password-reset`;
+    console.log('[sendResetPasswordEmail] Sending POST to:', url);
+    const res = await axios.post(url, {
+      token,
+      email,
     });
-    if (!res.ok) {
-      console.error(`Failed to send email: ${res.status} ${res.statusText}`);
+    console.log('[sendResetPasswordEmail] Response:', res.status, res.statusText, res.data);
+    if (res.status !== 200) {
+      console.error(
+        `[sendResetPasswordEmail] Failed to send email: ${res.status} ${res.statusText}`
+      );
       return { message: 'Something went wrong.' };
     }
     return { message: 'If the email exists, a reset link will be sent' };
-  } catch {
+  } catch (err) {
+    console.error('[sendResetPasswordEmail] Error:', err);
     return { message: 'Something went wrong.' };
   }
 };

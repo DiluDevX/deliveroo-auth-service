@@ -12,6 +12,7 @@ import {
 const router = Router();
 
 /**
+/**
  * @swagger
  * /auth/check-email:
  *   post:
@@ -66,6 +67,7 @@ const router = Router();
 router.post('/check-email', validateBody(checkEmailSchema), authController.checkEmail);
 
 /**
+/**
  * @swagger
  * /auth/signup:
  *   post:
@@ -113,6 +115,7 @@ router.post('/check-email', validateBody(checkEmailSchema), authController.check
 router.post('/signup', validateBody(signUpSchema), authController.signup);
 
 /**
+/**
  * @swagger
  * /auth/login:
  *   post:
@@ -159,8 +162,24 @@ router.post('/signup', validateBody(signUpSchema), authController.signup);
  *       401:
  *         description: Invalid credentials
  */
+
 router.post('/login', validateBody(logInSchema), authController.login);
 
+/**
+ * @swagger
+ * /auth/logout:
+ *   post:
+ *     summary: Logout user
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ *       401:
+ *         description: Not authenticated
+ */
+router.post('/logout', authController.logOut);
+
+/**
 /**
  * @swagger
  * /auth/refresh:
@@ -200,6 +219,7 @@ router.post('/login', validateBody(logInSchema), authController.login);
 router.post('/refresh', authController.refreshToken);
 
 /**
+/**
  * @swagger
  * /auth/forgot-password:
  *   post:
@@ -225,6 +245,7 @@ router.post('/refresh', authController.refreshToken);
  */
 router.post('/forgot-password', validateBody(forgotPasswordSchema), authController.forgotPassword);
 
+/**
 /**
  * @swagger
  * /auth/reset-password:
@@ -259,6 +280,7 @@ router.post('/forgot-password', validateBody(forgotPasswordSchema), authControll
  */
 router.post('/reset-password', validateBody(resetPasswordSchema), authController.resetPassword);
 
+/**
 /**
  * @swagger
  * /auth/me:
