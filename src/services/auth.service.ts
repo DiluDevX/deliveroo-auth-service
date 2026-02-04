@@ -1,16 +1,20 @@
 import { prisma } from '../config/database';
 import { comparePasswords, hashPassword } from '../utils/password';
 import { generateAccessToken, generateRefreshToken, hashToken, verifyToken } from '../utils/jwt';
-import { LogInInput, RefreshTokenInput, SignUpInput } from '../schema/auth.schema';
+import { AdminLogInInput, LogInInput, RefreshTokenInput, SignUpInput } from '../schema/auth.schema';
 import { BadRequestError, ConflictError, UnauthorizedError } from '../utils/errors';
 import crypto from 'node:crypto';
 import { User } from '../types/global';
 import axios from 'axios';
 
-// Helper to exclude password from user
 const excludePassword = (user: User) => {
   const { password: _password, ...userWithoutPassword } = user;
   return userWithoutPassword;
+};
+
+export const getAll = async () => {
+  const users = await prisma.user.findMany();
+  return users.map(excludePassword);
 };
 
 export const checkEmail = async (email: string) => {
@@ -86,7 +90,62 @@ export const login = async (data: LogInInput) => {
     throw new UnauthorizedError('Invalid email or password');
   }
 
-  const accessToken = generateAccessToken({ userId: user.id, email: user.email, role: user.role });
+  const isPlatformAdmin = user.role === 'platform_admin' && user.restaurantId === null;
+
+  if (isPlatformAdmin) {
+    return { user: excludePassword(user) };
+  } else {
+    const accessToken = generateAccessToken({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+    });
+    const refreshToken = generateRefreshToken({
+      userId: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      role: user.role,
+    });
+
+    const hashedRefreshToken = hashToken(refreshToken);
+
+    await prisma.refreshToken.create({
+      data: {
+        token: hashedRefreshToken,
+        userId: user.id,
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      },
+    });
+
+    return {
+      user: excludePassword(user),
+      accessToken,
+      refreshToken,
+    };
+  }
+};
+
+export const adminLogin = async (data: AdminLogInInput) => {
+  const user = await prisma.user.findUnique({
+    where: { email: data.email },
+  });
+
+  if (!user) {
+    throw new UnauthorizedError('Invalid email or password');
+  }
+
+  const isPasswordValid = await comparePasswords(data.password, user.password);
+
+  if (!isPasswordValid) {
+    throw new UnauthorizedError('Invalid email or password');
+  }
+
+  const accessToken = generateAccessToken({
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+  });
   const refreshToken = generateRefreshToken({
     userId: user.id,
     firstName: user.firstName,

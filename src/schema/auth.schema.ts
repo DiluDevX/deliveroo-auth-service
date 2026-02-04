@@ -26,6 +26,12 @@ export const logInSchema = z.object({
   password: checkPasswordSchema,
 });
 
+export const adminLogInSchema = z.object({
+  email: emailSchema,
+  password: checkPasswordSchema,
+  apiKey: z.string().min(1, 'API Key is required'),
+});
+
 export const checkEmailSchema = z.object({
   email: emailSchema,
 });
@@ -47,6 +53,7 @@ export const refreshTokenSchema = z.string().min(1, 'Refresh token is required')
 
 export type SignUpInput = z.infer<typeof signUpSchema>;
 export type LogInInput = z.infer<typeof logInSchema>;
+export type AdminLogInInput = z.infer<typeof adminLogInSchema>;
 export type CheckEmailInput = z.infer<typeof checkEmailSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;

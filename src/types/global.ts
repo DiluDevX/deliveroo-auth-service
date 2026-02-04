@@ -4,5 +4,7 @@ export interface User {
   email: string;
   phone: string | null;
   password: string;
-  role: 'user' | 'admin';
+  restaurantId: string | null;
+  orderCount: number | null;
+  role: 'user' | 'platform_admin' | 'restaurant_admin';
 }

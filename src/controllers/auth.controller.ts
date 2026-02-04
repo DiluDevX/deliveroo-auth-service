@@ -20,6 +20,15 @@ const setAuthCookies = (res: Response, accessToken: string, refreshToken: string
   });
 };
 
+export const getAllUsers = async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const users = await authService.getAll();
+    res.status(200).json({ users });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const checkEmail = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const response = await authService.checkEmail(req.body.email);
@@ -46,6 +55,14 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
   const { user, accessToken, refreshToken } = await authService.login(req.body);
+  if (accessToken && refreshToken) {
+    setAuthCookies(res, accessToken, refreshToken);
+  }
+  res.status(200).json({ user });
+});
+
+export const adminLogin = asyncHandler(async (req: Request, res: Response) => {
+  const { user, accessToken, refreshToken } = await authService.adminLogin(req.body);
   setAuthCookies(res, accessToken, refreshToken);
   res.status(200).json({ user });
 });

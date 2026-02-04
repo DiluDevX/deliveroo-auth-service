@@ -10,11 +10,11 @@
     "format:fix": "prettier --write .",
     "lint": "eslint src",
     "lint:fix": "eslint --fix src",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:migrate:prod": "prisma migrate deploy",
-    "prisma:studio": "prisma studio",
-    "prisma:push": "prisma db push",
+    "prisma:generate": "doppler run -- prisma generate",
+    "prisma:migrate": "doppler run -- prisma migrate dev",
+    "prisma:migrate:prod": "doppler run -- prisma migrate deploy",
+    "prisma:studio": "doppler run -- prisma studio",
+    "prisma:push": "doppler run -- prisma db push",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [

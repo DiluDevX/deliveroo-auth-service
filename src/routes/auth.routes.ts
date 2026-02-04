@@ -2,6 +2,7 @@ import { Router } from 'express';
 import * as authController from '../controllers/auth.controller';
 import { validateBody } from '../middleware/validate.middleware';
 import {
+  adminLogInSchema,
   checkEmailSchema,
   forgotPasswordSchema,
   logInSchema,
@@ -10,6 +11,8 @@ import {
 } from '../schema/auth.schema';
 
 const router = Router();
+
+router.get("/users", authController.getAllUsers);
 
 /**
 /**
@@ -164,6 +167,8 @@ router.post('/signup', validateBody(signUpSchema), authController.signup);
  */
 
 router.post('/login', validateBody(logInSchema), authController.login);
+
+router.post('/admin-login', validateBody(adminLogInSchema), authController.adminLogin);
 
 /**
  * @swagger
