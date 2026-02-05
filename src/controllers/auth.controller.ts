@@ -76,11 +76,14 @@ export const logOut = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
-export const refreshToken = asyncHandler(async (req: Request, res: Response) => {
+export const refreshToken = async (req: Request, res: Response) => {
+  if (req.cookies.refreshToken === undefined) {
+    return res.status(401).json({ message: 'No refresh token provided' });
+  }
   const { accessToken, refreshToken } = await authService.refresh(req.cookies.refreshToken);
   setAuthCookies(res, accessToken, refreshToken);
   res.status(200).json({ message: 'Token refreshed successfully' });
-});
+};
 
 export const forgotPassword = asyncHandler(async (req: Request, res: Response) => {
   const response = await authService.forgotPassword(req.body.email);
