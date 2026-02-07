@@ -67,6 +67,12 @@ export const adminLogin = asyncHandler(async (req: Request, res: Response) => {
   res.status(200).json({ user });
 });
 
+export const updateUserPartially = asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.params.userId;
+  const user = await authService.updateUserPartially(userId as string, req.body);
+  res.status(200).json({ user });
+});
+
 export const logOut = asyncHandler(async (req: Request, res: Response) => {
   const result = await authService.logOut(req.cookies.refreshToken);
   if (result) {

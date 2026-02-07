@@ -8,11 +8,12 @@ import {
   logInSchema,
   resetPasswordSchema,
   signUpSchema,
+  userUpdatePartiallySchema,
 } from '../schema/auth.schema';
 
 const router = Router();
 
-router.get("/users", authController.getAllUsers);
+router.get('/users', authController.getAllUsers);
 
 /**
 /**
@@ -169,6 +170,12 @@ router.post('/signup', validateBody(signUpSchema), authController.signup);
 router.post('/login', validateBody(logInSchema), authController.login);
 
 router.post('/admin-login', validateBody(adminLogInSchema), authController.adminLogin);
+
+router.patch(
+  '/update-partially/:userId',
+  validateBody(userUpdatePartiallySchema),
+  authController.updateUserPartially
+);
 
 /**
  * @swagger

@@ -19,6 +19,18 @@ export const signUpSchema = z.object({
   email: emailSchema,
   phone: z.string().optional(),
   password: createPasswordSchema,
+  role: z.enum(['user', 'platform_admin', 'restaurant_admin']).default('user'),
+  restaurantId: z.string().optional(),
+});
+
+export const userUpdatePartiallySchema = z.object({
+  firstName: z.string().min(1, 'First name is required').max(50, 'First name too long').optional(),
+  lastName: z.string().min(1, 'Last name is required').max(50, 'Last name too long').optional(),
+  email: emailSchema.optional(),
+  phone: z.string().optional(),
+  password: createPasswordSchema.optional(),
+  role: z.enum(['user', 'platform_admin', 'restaurant_admin']).default('user').optional(),
+  restaurantId: z.string().optional(),
 });
 
 export const logInSchema = z.object({
@@ -59,3 +71,4 @@ export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type ValidateTokenInput = z.infer<typeof validateTokenSchema>;
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
+export type UserUpdatePartiallyInput = z.infer<typeof userUpdatePartiallySchema>;

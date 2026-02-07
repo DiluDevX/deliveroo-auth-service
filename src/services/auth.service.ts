@@ -50,27 +50,13 @@ export const signup = async (data: SignUpInput) => {
       email: data.email,
       phone: data.phone,
       password: hashedPassword,
-    },
-  });
-
-  const refreshToken = generateRefreshToken({
-    userId: user.id,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    email: user.email,
-  });
-
-  const hashedRefreshToken = hashToken(refreshToken);
-
-  await prisma.refreshToken.create({
-    data: {
-      token: hashedRefreshToken,
-      userId: user.id,
-      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      role: data.role,
+      restaurantId: data.role === 'restaurant_admin' ? data.restaurantId : null,
     },
   });
 
   return {
+    user: excludePassword(user),
     message: 'User created successfully',
   };
 };
@@ -171,6 +157,48 @@ export const adminLogin = async (data: AdminLogInInput) => {
   };
 };
 
+export const updateUserPartially = async (userId: string, data: Partial<User>) => {
+  if (!userId) {
+    throw new BadRequestError('User ID is required');
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+  if (!user) {
+    throw new BadRequestError('User not found');
+  }
+
+  if (data.email && data.email !== user.email) {
+    const emailTaken = await prisma.user.findUnique({
+      where: { email: data.email },
+    });
+    if (emailTaken) {
+      throw new ConflictError('Email is already in use', 'EMAIL_IN_USE');
+    }
+  }
+
+  const updatedData: Partial<User> = {};
+
+  if (data.firstName !== undefined) updatedData.firstName = data.firstName;
+  if (data.lastName !== undefined) updatedData.lastName = data.lastName;
+  if (data.email !== undefined) updatedData.email = data.email;
+  if (data.phone !== undefined) updatedData.phone = data.phone;
+  if (data.role !== undefined) updatedData.role = data.role;
+  if (data.restaurantId !== undefined) updatedData.restaurantId = data.restaurantId;
+
+  if (data.password) {
+    updatedData.password = await hashPassword(data.password);
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: updatedData,
+  });
+
+  return excludePassword(updatedUser);
+};
+
 export const logOut = async (refreshToken: string) => {
   await prisma.refreshToken.deleteMany({
     where: { token: refreshToken },
@@ -255,7 +283,6 @@ export const forgotPassword = async (email: string) => {
 
 export const sendResetPasswordEmail = async (token: string, email: string) => {
   try {
-    console.log('[sendResetPasswordEmail] Called with token:', token, 'email:', email);
     if (typeof fetch !== 'function') {
       console.error(
         '[sendResetPasswordEmail] Global fetch is not available. Use Node 18+ or add a fetch polyfill.'
@@ -268,12 +295,10 @@ export const sendResetPasswordEmail = async (token: string, email: string) => {
       return { message: 'Something went wrong.' };
     }
     const url = `${process.env.MAIL_SERVICE_URL}/api/mail/password-reset`;
-    console.log('[sendResetPasswordEmail] Sending POST to:', url);
     const res = await axios.post(url, {
       token,
       email,
     });
-    console.log('[sendResetPasswordEmail] Response:', res.status, res.statusText, res.data);
     if (res.status !== 200) {
       console.error(
         `[sendResetPasswordEmail] Failed to send email: ${res.status} ${res.statusText}`
