@@ -5,7 +5,12 @@ export interface User {
   email: string;
   phone: string | null;
   password: string;
-  restaurantId: string | null;
-  orderCount: number | null;
-  role: 'user' | 'platform_admin' | 'restaurant_admin';
+  role: 'user' | 'platform_admin' | 'restaurant_user';
+}
+
+export interface RestaurantUser {
+  id: string;
+  role: 'employee' | 'super-admin' | 'admin' | 'finance';
+  restaurantId: string;
+  userId: string;
 }

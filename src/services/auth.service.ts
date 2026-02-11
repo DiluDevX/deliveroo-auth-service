@@ -51,9 +51,18 @@ export const signup = async (data: SignUpInput) => {
       phone: data.phone,
       password: hashedPassword,
       role: data.role,
-      restaurantId: data.role === 'restaurant_admin' ? data.restaurantId : null,
     },
   });
+
+  if (data.role === 'restaurant_user' && data.restaurantId) {
+    await prisma.restaurantUser.create({
+      data: {
+        role: 'employee',
+        restaurantId: data.restaurantId,
+        userId: user.id,
+      },
+    });
+  }
 
   return {
     user: excludePassword(user),
@@ -76,40 +85,34 @@ export const login = async (data: LogInInput) => {
     throw new UnauthorizedError('Invalid email or password');
   }
 
-  const isPlatformAdmin = user.role === 'platform_admin' && user.restaurantId === null;
+  const accessToken = generateAccessToken({
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+  });
+  const refreshToken = generateRefreshToken({
+    userId: user.id,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.email,
+    role: user.role,
+  });
 
-  if (isPlatformAdmin) {
-    return { user: excludePassword(user) };
-  } else {
-    const accessToken = generateAccessToken({
+  const hashedRefreshToken = hashToken(refreshToken);
+
+  await prisma.refreshToken.create({
+    data: {
+      token: hashedRefreshToken,
       userId: user.id,
-      email: user.email,
-      role: user.role,
-    });
-    const refreshToken = generateRefreshToken({
-      userId: user.id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      role: user.role,
-    });
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    },
+  });
 
-    const hashedRefreshToken = hashToken(refreshToken);
-
-    await prisma.refreshToken.create({
-      data: {
-        token: hashedRefreshToken,
-        userId: user.id,
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      },
-    });
-
-    return {
-      user: excludePassword(user),
-      accessToken,
-      refreshToken,
-    };
-  }
+  return {
+    user: excludePassword(user),
+    accessToken,
+    refreshToken,
+  };
 };
 
 export const adminLogin = async (data: AdminLogInInput) => {
@@ -185,7 +188,6 @@ export const updateUserPartially = async (userId: string, data: Partial<User>) =
   if (data.email !== undefined) updatedData.email = data.email;
   if (data.phone !== undefined) updatedData.phone = data.phone;
   if (data.role !== undefined) updatedData.role = data.role;
-  if (data.restaurantId !== undefined) updatedData.restaurantId = data.restaurantId;
 
   if (data.password) {
     updatedData.password = await hashPassword(data.password);
@@ -216,14 +218,20 @@ export const refresh = async (data: RefreshTokenInput) => {
   });
 
   if (!storedToken || storedToken.expiresAt < new Date()) {
-    throw new UnauthorizedError('Invalid or expired refresh token');
+    return {
+      accessToken: null,
+      refreshToken: null,
+    };
   }
 
   const user = await prisma.user.findUnique({
     where: { id: storedToken.userId },
   });
   if (!user) {
-    throw new UnauthorizedError('Invalid or expired refresh token');
+    return {
+      accessToken: null,
+      refreshToken: null,
+    };
   }
 
   const accessToken = generateAccessToken({

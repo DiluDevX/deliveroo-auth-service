@@ -11,18 +11,16 @@ declare module 'express' {
 }
 
 /**
- * Middleware to authenticate requests using JWT tokens.
- * Extracts and verifies the Bearer token from Authorization header.
+ * Middleware to authenticate requests using JWT tokens from cookies.
+ * Extracts and verifies the accessToken from cookies.
  */
 export function authenticate(req: Request, _res: Response, next: NextFunction): void {
   try {
-    const authHeader = req.headers.authorization;
+    const token = req.cookies.accessToken;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!token) {
       throw new UnauthorizedError('No token provided');
     }
-
-    const token = authHeader.substring(7);
 
     if (config.auth.validationMode === 'remote') {
       // For remote validation, you would call the auth service here
@@ -69,14 +67,13 @@ export function requireRole(...allowedRoles: string[]) {
  */
 export function optionalAuth(req: Request, _res: Response, next: NextFunction): void {
   try {
-    const authHeader = req.headers.authorization;
+    const token = req.cookies.accessToken;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!token) {
       next();
       return;
     }
 
-    const token = authHeader.substring(7);
     const decoded = verifyToken<TokenPayload>(token);
     req.user = decoded;
 
@@ -86,3 +83,5 @@ export function optionalAuth(req: Request, _res: Response, next: NextFunction): 
     next();
   }
 }
+
+export const isPlatformAdmin = requireRole('platform_admin');

@@ -87,6 +87,9 @@ export const refreshToken = async (req: Request, res: Response) => {
     return res.status(401).json({ message: 'No refresh token provided' });
   }
   const { accessToken, refreshToken } = await authService.refresh(req.cookies.refreshToken);
+  if (!accessToken || !refreshToken) {
+    return res.status(401).json({ message: 'Invalid refresh token' });
+  }
   setAuthCookies(res, accessToken, refreshToken);
   res.status(200).json({ message: 'Token refreshed successfully' });
 };

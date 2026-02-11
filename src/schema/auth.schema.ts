@@ -19,7 +19,7 @@ export const signUpSchema = z.object({
   email: emailSchema,
   phone: z.string().optional(),
   password: createPasswordSchema,
-  role: z.enum(['user', 'platform_admin', 'restaurant_admin']).default('user'),
+  role: z.enum(['user', 'platform_admin', 'restaurant_user']).default('user'),
   restaurantId: z.string().optional(),
 });
 
@@ -29,7 +29,7 @@ export const userUpdatePartiallySchema = z.object({
   email: emailSchema.optional(),
   phone: z.string().optional(),
   password: createPasswordSchema.optional(),
-  role: z.enum(['user', 'platform_admin', 'restaurant_admin']).default('user').optional(),
+  role: z.enum(['user', 'platform_admin', 'restaurant_user']).default('user').optional(),
   restaurantId: z.string().optional(),
 });
 
@@ -63,6 +63,12 @@ export const validateTokenSchema = z.object({
 
 export const refreshTokenSchema = z.string().min(1, 'Refresh token is required');
 
+export const updateRestaurantUserPartiallyRequestBodySchema = z.object({
+  role: z.enum(['employee', 'super-admin', 'admin', 'finance']).optional(),
+  userId: z.string().optional(),
+  restaurantId: z.string().optional(),
+});
+
 export type SignUpInput = z.infer<typeof signUpSchema>;
 export type LogInInput = z.infer<typeof logInSchema>;
 export type AdminLogInInput = z.infer<typeof adminLogInSchema>;
@@ -72,3 +78,6 @@ export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type ValidateTokenInput = z.infer<typeof validateTokenSchema>;
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
 export type UserUpdatePartiallyInput = z.infer<typeof userUpdatePartiallySchema>;
+export type UpdateRestaurantUserPartiallyInput = z.infer<
+  typeof updateRestaurantUserPartiallyRequestBodySchema
+>;
