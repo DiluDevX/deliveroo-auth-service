@@ -1,20 +1,28 @@
 import { prisma } from '../config/database';
 import { comparePasswords, hashPassword } from '../utils/password';
 import { generateAccessToken, generateRefreshToken, hashToken, verifyToken } from '../utils/jwt';
-import { AdminLogInInput, LogInInput, RefreshTokenInput, SignUpInput } from '../schema/auth.schema';
+import {
+  AdminLogInInput,
+  RefreshTokenInput,
+  RefreshTokenOutput,
+  SignUpInput,
+} from '../schema/auth.schema';
 import { BadRequestError, ConflictError, UnauthorizedError } from '../utils/errors';
 import crypto from 'node:crypto';
-import { User } from '../types/global';
+import { IUser } from '../types/global';
 import axios from 'axios';
+import { CommonResponseDTO } from '../dtos/common.dto';
+import {
+  AuthenticationResponseBodyDTO,
+  ForgotPasswordResponseBodyDTO,
+  LoginResponseBodyDTO,
+  LogOutResponseBodyDTO,
+  SignUpResponseBodyDTO,
+} from '../dtos/auth.dto';
 
-const excludePassword = (user: User) => {
+export const excludePassword = (user: IUser) => {
   const { password: _password, ...userWithoutPassword } = user;
   return userWithoutPassword;
-};
-
-export const getAll = async () => {
-  const users = await prisma.user.findMany();
-  return users.map(excludePassword);
 };
 
 export const checkEmail = async (email: string) => {
@@ -28,11 +36,13 @@ export const checkEmail = async (email: string) => {
 
   return {
     exists: true,
-    user: excludePassword(user),
+    user: user,
   };
 };
 
-export const signup = async (data: SignUpInput) => {
+export const signup = async (
+  data: SignUpInput
+): Promise<CommonResponseDTO<SignUpResponseBodyDTO>> => {
   const existingUser = await prisma.user.findUnique({
     where: { email: data.email },
   });
@@ -65,37 +75,43 @@ export const signup = async (data: SignUpInput) => {
   }
 
   return {
-    user: excludePassword(user),
+    success: true,
     message: 'User created successfully',
+    data: {
+      user: null,
+    },
   };
 };
 
-export const login = async (data: LogInInput) => {
-  const user = await prisma.user.findUnique({
-    where: { email: data.email },
-  });
+export const login = async ({
+  email,
+  password,
+}: {
+  email: string;
+  password: string;
+}): Promise<CommonResponseDTO<LoginResponseBodyDTO>> => {
+  const foundUser = await checkEmail(email);
 
-  if (!user) {
-    throw new UnauthorizedError('Invalid email or password');
+  if (!foundUser.exists || !foundUser.user) {
+    throw new UnauthorizedError('Invalid credentials');
   }
 
-  const isPasswordValid = await comparePasswords(data.password, user.password);
+  const isPasswordValid = await comparePasswords(password, foundUser.user?.password || '');
 
   if (!isPasswordValid) {
-    throw new UnauthorizedError('Invalid email or password');
+    throw new UnauthorizedError('Invalid credentials');
   }
 
   const accessToken = generateAccessToken({
-    userId: user.id,
-    email: user.email,
-    role: user.role,
+    userId: foundUser.user.id,
+    email: foundUser.user.email,
+    role: foundUser.user.role,
   });
+
   const refreshToken = generateRefreshToken({
-    userId: user.id,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    email: user.email,
-    role: user.role,
+    userId: foundUser.user.id,
+    email: foundUser.user.email,
+    role: foundUser.user.role,
   });
 
   const hashedRefreshToken = hashToken(refreshToken);
@@ -103,15 +119,19 @@ export const login = async (data: LogInInput) => {
   await prisma.refreshToken.create({
     data: {
       token: hashedRefreshToken,
-      userId: user.id,
+      userId: foundUser.user.id,
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     },
   });
 
   return {
-    user: excludePassword(user),
-    accessToken,
-    refreshToken,
+    data: {
+      user: excludePassword(foundUser.user),
+      accessToken,
+      refreshToken,
+    },
+    success: true,
+    message: 'Login successful',
   };
 };
 
@@ -160,7 +180,7 @@ export const adminLogin = async (data: AdminLogInInput) => {
   };
 };
 
-export const updateUserPartially = async (userId: string, data: Partial<User>) => {
+export const updateUserPartially = async (userId: string, data: Partial<IUser>) => {
   if (!userId) {
     throw new BadRequestError('User ID is required');
   }
@@ -181,7 +201,7 @@ export const updateUserPartially = async (userId: string, data: Partial<User>) =
     }
   }
 
-  const updatedData: Partial<User> = {};
+  const updatedData: Partial<IUser> = {};
 
   if (data.firstName !== undefined) updatedData.firstName = data.firstName;
   if (data.lastName !== undefined) updatedData.lastName = data.lastName;
@@ -201,14 +221,18 @@ export const updateUserPartially = async (userId: string, data: Partial<User>) =
   return excludePassword(updatedUser);
 };
 
-export const logOut = async (refreshToken: string) => {
+export const logOut = async (
+  refreshToken: string
+): Promise<CommonResponseDTO<LogOutResponseBodyDTO>> => {
   await prisma.refreshToken.deleteMany({
     where: { token: refreshToken },
   });
-  return true;
+  return { success: true, message: 'Logged out successfully' };
 };
 
-export const refresh = async (data: RefreshTokenInput) => {
+export const refresh = async (
+  data: RefreshTokenInput
+): Promise<CommonResponseDTO<RefreshTokenOutput>> => {
   const payload = verifyToken(data);
 
   const hashedRefreshToken = hashToken(data);
@@ -219,8 +243,8 @@ export const refresh = async (data: RefreshTokenInput) => {
 
   if (!storedToken || storedToken.expiresAt < new Date()) {
     return {
-      accessToken: null,
-      refreshToken: null,
+      success: false,
+      message: 'Refresh token is invalid',
     };
   }
 
@@ -229,8 +253,8 @@ export const refresh = async (data: RefreshTokenInput) => {
   });
   if (!user) {
     return {
-      accessToken: null,
-      refreshToken: null,
+      success: false,
+      message: 'User not found',
     };
   }
 
@@ -261,16 +285,18 @@ export const refresh = async (data: RefreshTokenInput) => {
     },
   });
 
-  return { accessToken, refreshToken };
+  return { message: 'Refresh token updated', success: true, data: { accessToken, refreshToken } };
 };
 
-export const forgotPassword = async (email: string) => {
+export const forgotPassword = async (
+  email: string
+): Promise<CommonResponseDTO<ForgotPasswordResponseBodyDTO>> => {
   const user = await prisma.user.findUnique({
     where: { email },
   });
 
   if (!user) {
-    return { message: 'If the email exists, a reset link will be sent' };
+    return { message: 'If the email exists, a reset link will be sent', success: false };
   }
 
   const token = crypto.randomBytes(32).toString('hex');
@@ -286,7 +312,7 @@ export const forgotPassword = async (email: string) => {
 
   await sendResetPasswordEmail(token, email);
 
-  return { message: 'Reset link sent' };
+  return { message: 'Reset link sent', success: true };
 };
 
 export const sendResetPasswordEmail = async (token: string, email: string) => {
@@ -345,22 +371,24 @@ export const resetPassword = async (token: string, newPassword: string) => {
 
   return { message: 'Password reset successful' };
 };
-export const validateAccessToken = async (token: string) => {
+export const validateAccessToken = async (
+  token: string
+): Promise<CommonResponseDTO<AuthenticationResponseBodyDTO>> => {
   try {
     const payload = verifyToken(token);
 
     if (typeof payload.exp !== 'number' || payload.exp < Date.now() / 1000) {
-      return { valid: false, user: null };
+      return { message: 'Unauthorized', success: false };
     }
 
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
     });
     if (!user) {
-      return { valid: false, user: null };
+      return { message: 'Unauthorized', success: false };
     }
-    return { valid: true, user: excludePassword(user) };
+    return { message: 'Authorized', success: true, data: { user } };
   } catch {
-    return { valid: false, user: null };
+    return { message: 'Unauthorized', success: false };
   }
 };

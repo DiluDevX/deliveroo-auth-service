@@ -2,6 +2,8 @@ import { Request, Response, Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { version } from '../../package.json';
 import { prisma } from '../config/database';
+import { CommonResponseDTO, HealthCheckResponseBodyDTO } from '../dtos/common.dto';
+import { HttpStatusCode } from 'axios';
 
 const router = Router();
 
@@ -13,7 +15,7 @@ const rateLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-async function checkDatabaseConnection(): Promise<string> {
+async function checkDatabaseConnection(): Promise<'connected' | 'disconnected'> {
   try {
     await prisma.$queryRaw`SELECT 1`;
     return 'connected';
@@ -70,16 +72,29 @@ async function checkDatabaseConnection(): Promise<string> {
  *                   example: Too many requests from this IP, please try again later.
  */
 
-router.get('/', rateLimiter, async (_req: Request, res: Response) => {
-  const dbHealth = await checkDatabaseConnection();
+router.get(
+  '/',
+  rateLimiter,
+  async (_req: Request, res: Response<CommonResponseDTO<HealthCheckResponseBodyDTO>>) => {
+    const db = await checkDatabaseConnection();
 
-  res.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    service: process.env.SERVICE_NAME || 'auth-microservice',
-    db: dbHealth,
-    version,
+    res.json({
+      success: true,
+      message: 'Health check successful',
+      data: {
+        db,
+        service: 'auth-microservice',
+        timestamp: new Date(),
+        version,
+      },
+    });
+  }
+);
+
+router.all('*', (_req, res: Response<CommonResponseDTO<never>>) => {
+  res.status(HttpStatusCode.NotFound).json({
+    message: 'Route not found',
+    success: false,
   });
 });
-
-export const healthRoutes = router;
+export const commonRoutes = router;

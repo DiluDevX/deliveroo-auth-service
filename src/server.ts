@@ -5,11 +5,12 @@ import { connectDatabase, disconnectDatabase } from './config/database';
 import { logger } from './utils/logger';
 import { errorHandler } from './middleware/error-handler.middleware';
 import { requestLogger } from './middleware/request-logger.middleware';
-import { healthRoutes } from './routes/health.routes';
+import { commonRoutes } from './routes/common.routes';
 import { setupSwagger } from './swagger';
 import { apiKeyMiddleware } from './middleware/api-key.middleware';
 
 import authRoutes from './routes/auth.routes';
+import usersRoutes from './routes/user.routes';
 import cookieParser from 'cookie-parser';
 
 const app = express();
@@ -28,8 +29,9 @@ app.use(express.urlencoded({ extended: true }));
 // Request logging
 app.use(requestLogger as RequestHandler);
 
-app.use(healthRoutes);
+app.use(commonRoutes);
 app.use('/api/auth', apiKeyMiddleware, authRoutes);
+app.use('/api/users', apiKeyMiddleware, usersRoutes);
 // API Documentation
 setupSwagger(app);
 

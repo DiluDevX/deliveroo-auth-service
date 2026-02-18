@@ -1,4 +1,4 @@
-export interface User {
+export interface IUser {
   id: string;
   firstName: string;
   lastName: string;
@@ -6,9 +6,12 @@ export interface User {
   phone: string | null;
   password: string;
   role: 'user' | 'platform_admin' | 'restaurant_user';
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
 }
 
-export interface RestaurantUser {
+export interface IRestaurantUser {
   id: string;
   role: 'employee' | 'super-admin' | 'admin' | 'finance';
   restaurantId: string;

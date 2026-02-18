@@ -1,50 +1,72 @@
 import { NextFunction, Request, Response } from 'express';
-import asyncHandler from 'express-async-handler';
 import * as authService from '../services/auth.service';
+import {
+  AuthenticationRequestBodyDTO,
+  AuthenticationResponseBodyDTO,
+  CheckEmailRequestBodyDTO,
+  CheckEmailResponseBodyDTO,
+  ForgotPasswordRequestBodyDTO,
+  ForgotPasswordResponseBodyDTO,
+  LoginRequestBodyDTO,
+  LoginResponseBodyDTO,
+  LogOutRequestBodyDTO,
+  LogOutResponseBodyDTO,
+  RefreshTokenRequestBodyDTO,
+  refreshTokenResponseBodyDTO,
+  ResetPasswordRequestBodyDTO,
+  ResetPasswordResponseBodyDTO,
+  SignUpRequestBodyDTO,
+  SignUpResponseBodyDTO,
+} from '../dtos/auth.dto';
+import { CommonResponseDTO } from '../dtos/common.dto';
+import { NotFoundError } from '../utils/errors';
 
-const setAuthCookies = (res: Response, accessToken: string, refreshToken: string) => {
-  const isProduction = process.env.NODE_ENV === 'production';
-
-  res.cookie('accessToken', accessToken, {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? 'strict' : 'lax',
-    maxAge: 15 * 60 * 1000,
-  });
-
-  res.cookie('refreshToken', refreshToken, {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? 'strict' : 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
-};
-
-export const getAllUsers = async (_req: Request, res: Response, next: NextFunction) => {
+export const checkEmail = async (
+  req: Request<unknown, CheckEmailResponseBodyDTO, CheckEmailRequestBodyDTO>,
+  res: Response<CommonResponseDTO<CheckEmailResponseBodyDTO>>,
+  next: NextFunction
+) => {
   try {
-    const users = await authService.getAll();
-    res.status(200).json({ users });
-  } catch (error) {
-    next(error);
-  }
-};
+    console.log({
+      message: 'checking email',
+      data: {
+        email: req.body.email,
+      },
+    });
 
-export const checkEmail = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const response = await authService.checkEmail(req.body.email);
+    const foundUser = await authService.checkEmail(req.body.email);
 
-    if (!response.exists) {
-      res.status(404).json({ message: 'User not found' });
-      return;
+    console.log({
+      message: 'found user',
+      data: {
+        id: foundUser?.user?.id,
+      },
+    });
+
+    if (!foundUser) {
+      throw new NotFoundError('User not found');
     }
 
-    res.status(200).json({ exists: true, user: response.user });
+    res.status(200).json({
+      success: false,
+      message: 'User exists',
+    });
   } catch (error) {
+    console.log({
+      message: 'check email error',
+      data: {
+        error,
+      },
+    });
     next(error);
   }
 };
 
-export const signup = async (req: Request, res: Response, next: NextFunction) => {
+export const signup = async (
+  req: Request<unknown, SignUpResponseBodyDTO, SignUpRequestBodyDTO>,
+  res: Response<CommonResponseDTO<SignUpResponseBodyDTO>>,
+  next: NextFunction
+) => {
   try {
     const response = await authService.signup(req.body);
     res.status(201).json(response);
@@ -53,71 +75,81 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
   }
 };
 
-export const login = asyncHandler(async (req: Request, res: Response) => {
-  const { user, accessToken, refreshToken } = await authService.login(req.body);
-  if (accessToken && refreshToken) {
-    setAuthCookies(res, accessToken, refreshToken);
-  }
-  res.status(200).json({ user });
-});
+export const login = async (
+  req: Request<unknown, LoginResponseBodyDTO, LoginRequestBodyDTO>,
+  res: Response<CommonResponseDTO<LoginResponseBodyDTO>>,
+  next: NextFunction
+) => {
+  try {
+    const response = await authService.login(req.body);
 
-export const adminLogin = asyncHandler(async (req: Request, res: Response) => {
-  const { user, accessToken, refreshToken } = await authService.adminLogin(req.body);
-  setAuthCookies(res, accessToken, refreshToken);
-  res.status(200).json({ user });
-});
-
-export const updateUserPartially = asyncHandler(async (req: Request, res: Response) => {
-  const userId = req.params.userId;
-  const user = await authService.updateUserPartially(userId as string, req.body);
-  res.status(200).json({ user });
-});
-
-export const logOut = asyncHandler(async (req: Request, res: Response) => {
-  const result = await authService.logOut(req.cookies.refreshToken);
-  if (result) {
-    res.clearCookie('accessToken');
-    res.clearCookie('refreshToken');
-    res.status(200).json({ message: 'Logged out successfully' });
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
   }
-});
-
-export const refreshToken = async (req: Request, res: Response) => {
-  if (req.cookies.refreshToken === undefined) {
-    return res.status(401).json({ message: 'No refresh token provided' });
-  }
-  const { accessToken, refreshToken } = await authService.refresh(req.cookies.refreshToken);
-  if (!accessToken || !refreshToken) {
-    return res.status(401).json({ message: 'Invalid refresh token' });
-  }
-  setAuthCookies(res, accessToken, refreshToken);
-  res.status(200).json({ message: 'Token refreshed successfully' });
 };
 
-export const forgotPassword = asyncHandler(async (req: Request, res: Response) => {
+export const logOut = async (
+  req: Request<unknown, CommonResponseDTO<LogOutResponseBodyDTO>, LogOutRequestBodyDTO>,
+  res: Response<CommonResponseDTO<LogOutResponseBodyDTO>>
+) => {
+  await authService.logOut(req.body.refreshToken);
+  res.status(200).json({ message: 'Logged out successfully', success: true });
+};
+
+export const refreshToken = async (
+  req: Request<unknown, CommonResponseDTO<refreshTokenResponseBodyDTO>, RefreshTokenRequestBodyDTO>,
+  res: Response<CommonResponseDTO<refreshTokenResponseBodyDTO>>
+) => {
+  if (req.body.refreshToken === undefined) {
+    return res.status(401).json({ message: 'No refresh token provided', success: false });
+  }
+  const response = await authService.refresh(req.body.refreshToken);
+  if (!response.data?.accessToken || !response.data?.refreshToken) {
+    return res.status(401).json({ message: 'Invalid refresh token', success: false });
+  }
+  res
+    .status(200)
+    .json({ message: 'Token refreshed successfully', success: true, data: response.data });
+};
+
+export const forgotPassword = async (
+  req: Request<unknown, ForgotPasswordResponseBodyDTO, ForgotPasswordRequestBodyDTO>,
+  res: Response<CommonResponseDTO<ForgotPasswordResponseBodyDTO>>
+) => {
   const response = await authService.forgotPassword(req.body.email);
   res.status(200).json(response);
-});
+};
 
-export const resetPassword = asyncHandler(async (req: Request, res: Response) => {
-  const response = await authService.resetPassword(req.body.token, req.body.password);
-  res.status(200).json(response);
-});
+export const resetPassword = async (
+  req: Request<unknown, ResetPasswordResponseBodyDTO, ResetPasswordRequestBodyDTO>,
+  res: Response<CommonResponseDTO<ResetPasswordResponseBodyDTO>>
+) => {
+  if (!req.body.token || !req.body.password) {
+    return res.status(400).json({ message: 'Token and password are required', success: false });
+  }
+  await authService.resetPassword(req.body.token, req.body.password);
+  res.status(200).json({ message: 'Password reset successfully', success: true });
+};
 
-export const me = async (req: Request, res: Response, next: NextFunction) => {
+export const me = async (
+  req: Request<unknown, AuthenticationResponseBodyDTO, AuthenticationRequestBodyDTO>,
+  res: Response<CommonResponseDTO<AuthenticationResponseBodyDTO>>,
+  next: NextFunction
+) => {
   try {
-    const token: string = req.cookies.accessToken;
+    const accessToken: string = req.body.accessToken;
 
-    if (!token) {
-      return res.status(401).json({ valid: false, user: null });
+    if (!accessToken) {
+      return res.status(401).json({ message: 'Unauthorized', success: false });
     }
 
-    const result = await authService.validateAccessToken(token);
+    const result = await authService.validateAccessToken(accessToken);
 
-    if (result.valid) {
-      return res.status(200).json({ valid: true, user: result.user });
+    if (result.success) {
+      return res.status(200).json({ message: 'Authorized', success: true, data: result.data });
     } else {
-      return res.status(401).json({ valid: false, user: result.user || null });
+      return res.status(401).json({ message: 'Unauthorized', success: false });
     }
   } catch (e) {
     next(e);

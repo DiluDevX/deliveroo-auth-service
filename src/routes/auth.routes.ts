@@ -2,18 +2,16 @@ import { Router } from 'express';
 import * as authController from '../controllers/auth.controller';
 import { validateBody } from '../middleware/validate.middleware';
 import {
-  adminLogInSchema,
-  checkEmailSchema,
-  forgotPasswordSchema,
-  logInSchema,
+  checkEmailRequestBodySchema,
+  forgotPasswordRequestBodySchema,
+  loginRequestBodySchema,
+  logOutRequestBodySchema,
+  refreshTokenRequestBodySchema,
   resetPasswordSchema,
-  signUpSchema,
-  userUpdatePartiallySchema,
+  signUpRequestBodySchema,
 } from '../schema/auth.schema';
 
 const router = Router();
-
-router.get('/users', authController.getAllUsers);
 
 /**
 /**
@@ -68,7 +66,7 @@ router.get('/users', authController.getAllUsers);
  *       400:
  *         description: Validation error
  */
-router.post('/check-email', validateBody(checkEmailSchema), authController.checkEmail);
+router.post('/check-email', validateBody(checkEmailRequestBodySchema), authController.checkEmail);
 
 /**
 /**
@@ -116,7 +114,7 @@ router.post('/check-email', validateBody(checkEmailSchema), authController.check
  *       409:
  *         description: User already exists
  */
-router.post('/signup', validateBody(signUpSchema), authController.signup);
+router.post('/signup', validateBody(signUpRequestBodySchema), authController.signup);
 
 /**
 /**
@@ -167,15 +165,7 @@ router.post('/signup', validateBody(signUpSchema), authController.signup);
  *         description: Invalid credentials
  */
 
-router.post('/login', validateBody(logInSchema), authController.login);
-
-router.post('/admin-login', validateBody(adminLogInSchema), authController.adminLogin);
-
-router.patch(
-  '/update-partially/:userId',
-  validateBody(userUpdatePartiallySchema),
-  authController.updateUserPartially
-);
+router.post('/login', validateBody(loginRequestBodySchema), authController.login);
 
 /**
  * @swagger
@@ -189,7 +179,7 @@ router.patch(
  *       401:
  *         description: Not authenticated
  */
-router.post('/logout', authController.logOut);
+router.post('/logout', validateBody(logOutRequestBodySchema), authController.logOut);
 
 /**
 /**
@@ -228,7 +218,7 @@ router.post('/logout', authController.logOut);
  *       401:
  *         description: Invalid or expired refresh token
  */
-router.post('/refresh', authController.refreshToken);
+router.post('/refresh', validateBody(refreshTokenRequestBodySchema), authController.refreshToken);
 
 /**
 /**
@@ -255,7 +245,11 @@ router.post('/refresh', authController.refreshToken);
  *       404:
  *         description: User not found
  */
-router.post('/forgot-password', validateBody(forgotPasswordSchema), authController.forgotPassword);
+router.post(
+  '/forgot-password',
+  validateBody(forgotPasswordRequestBodySchema),
+  authController.forgotPassword
+);
 
 /**
 /**
@@ -291,27 +285,5 @@ router.post('/forgot-password', validateBody(forgotPasswordSchema), authControll
  *         description: Invalid or expired token
  */
 router.post('/reset-password', validateBody(resetPasswordSchema), authController.resetPassword);
-
-/**
-/**
- * @swagger
- * /auth/me:
- *   post:
- *     summary: Authenticated user info
- *     tags: [Auth]
- *     parameters:
- *       - in: cookie
- *         name: accessToken
- *         required: true
- *         schema:
- *           type: string
- *         description: Access token cookie
- *     responses:
- *       200:
- *         description: Authenticated user
- *       400:
- *         description: User not Authorized
- */
-router.post('/me', authController.me);
 
 export default router;
