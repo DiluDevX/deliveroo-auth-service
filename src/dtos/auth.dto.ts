@@ -1,8 +1,10 @@
 import z from 'zod';
 import {
   checkEmailRequestBodySchema,
+  forgotPasswordRequestBodySchema,
   loginRequestBodySchema,
-  refreshTokenResponseBodySchema,
+  logoutRequestBodySchema,
+  refreshTokenRequestBodySchema,
   signUpRequestBodySchema,
 } from '../schema/auth.schema';
 import { User } from '@prisma/client';
@@ -20,55 +22,28 @@ export type LoginRequestBodyDTO = z.infer<typeof loginRequestBodySchema>;
 export type LoginResponseBodyDTO = {
   accessToken: string;
   refreshToken: string;
-  user: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    role: string;
-  };
 };
 
 export type SignUpRequestBodyDTO = z.infer<typeof signUpRequestBodySchema>;
 
-export type SignUpResponseBodyDTO = {
-  user: User | null;
+export type SignUpResponseBodyDTO = Omit<User, 'password'>;
+
+export type ForgotPasswordRequestBodyDTO = z.infer<typeof forgotPasswordRequestBodySchema>;
+
+export type RefreshTokenRequestBodyDTO = z.infer<typeof refreshTokenRequestBodySchema>;
+
+export type RefreshTokenResponseBodyDTO = {
+  accessToken: string;
+  refreshToken: string;
 };
 
-export type ForgotPasswordRequestBodyDTO = {
-  email: string;
-};
+export type LogoutRequestBodyDTO = z.infer<typeof logoutRequestBodySchema>;
 
-export type ForgotPasswordResponseBodyDTO = {
-  message: string;
+export type VerifyResetPasswordTokenRequestBodyDTO = {
+  token: string;
 };
 
 export type ResetPasswordRequestBodyDTO = {
   token: string;
   password: string;
-};
-
-export type ResetPasswordResponseBodyDTO = {
-  message: string;
-};
-
-export type RefreshTokenRequestBodyDTO = {
-  refreshToken: string;
-};
-
-export type LogOutResponseBodyDTO = {
-  message: string;
-};
-
-export type refreshTokenResponseBodyDTO = z.infer<typeof refreshTokenResponseBodySchema>;
-
-export type LogOutRequestBodyDTO = z.infer<typeof refreshTokenResponseBodySchema>;
-
-export type AuthenticationRequestBodyDTO = {
-  accessToken: string;
-  refreshToken: string;
-};
-
-export type AuthenticationResponseBodyDTO = {
-  user: User;
 };

@@ -1,7 +1,7 @@
-import { UpdateRestaurantUserPartiallyInput } from '../schema/auth.schema';
 import { prisma } from '../config/database';
 import { BadRequestError } from '../utils/errors';
 import { RestaurantRole } from '@prisma/client';
+import { findOneWithoutPassword } from './users.database.service';
 
 const roleMapping: Record<string, RestaurantRole> = {
   employee: 'employee',
@@ -10,10 +10,14 @@ const roleMapping: Record<string, RestaurantRole> = {
   finance: 'finance',
 };
 
-export const updateRestaurantUserRole = async (data: UpdateRestaurantUserPartiallyInput) => {
+export const updateRestaurantUserRole = async (
+  userId: string,
+  role: RestaurantRole,
+  restaurantId: string
+) => {
   // Verify user exists
-  const user = await prisma.user.findUnique({
-    where: { id: data.userId },
+  const user = await findOneWithoutPassword({
+    id: userId,
   });
 
   if (!user) {
@@ -21,17 +25,17 @@ export const updateRestaurantUserRole = async (data: UpdateRestaurantUserPartial
   }
 
   const updatedData: { role?: RestaurantRole } = {};
-  if (data.role !== undefined) {
-    updatedData.role = roleMapping[data.role];
+  if (user.role === 'restaurant_user') {
+    updatedData.role = roleMapping[role];
   } else {
-    throw new BadRequestError('Role is required');
+    throw new BadRequestError('Restaurant_User Role is required');
   }
 
   // Find and update by userId AND restaurantId
   const updated = await prisma.restaurantUser.findFirst({
     where: {
-      userId: data.userId,
-      restaurantId: data.restaurantId,
+      userId: userId,
+      restaurantId: restaurantId,
     },
   });
 

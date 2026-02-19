@@ -52,6 +52,6 @@ export const validateQuery = createValidator('query');
 /**
  * Validates route parameters against a Zod schema.
  * @example
- * router.get('/:id', validateParams(idParamSchema), getUser);
+ * router.get('/:id', validateParams(idRequestPathParamsSchema), getUser);
  */
 export const validateParams = createValidator('params');

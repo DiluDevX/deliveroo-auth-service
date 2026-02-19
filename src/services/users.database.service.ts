@@ -1,90 +1,103 @@
+import { Prisma, User } from '@prisma/client';
 import { prisma } from '../config/database';
-import {
-  CreateUserResponseBodyDTO,
-  GetAllUsersResponseBodyDTO,
-  GetSingleUserResponseBodyDTO,
-} from '../dtos/user.dto';
-import { BadRequestError, NotFoundError } from '../utils/errors';
+import { BadRequestError, ConflictError, NotFoundError } from '../utils/errors';
 import { hashPassword } from '../utils/password';
-import { excludePassword } from './auth.service';
 
-export const getAll = async (): Promise<GetAllUsersResponseBodyDTO> => {
+export const findManyWithoutPassword = async (
+  where: Prisma.UserWhereInput
+): Promise<Omit<User, 'password'>[]> => {
   const users = await prisma.user.findMany({
-    where: { deletedAt: null },
-  });
-  return {
-    users: users.map(excludePassword),
-  };
-};
-
-export const findUserById = async (userId: string): Promise<GetSingleUserResponseBodyDTO> => {
-  if (!userId) {
-    throw new BadRequestError('User ID is required');
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
+    where: where,
+    omit: {
+      password: true,
+    },
   });
 
-  if (!user || user.deletedAt) {
-    throw new NotFoundError('User not found');
-  }
-
-  return {
-    user: excludePassword(user),
-  };
+  return users;
 };
 
-export const createUser = async (data: {
+export const findManyWithPassword = async (where: Prisma.UserWhereInput): Promise<User[]> => {
+  const users = await prisma.user.findMany({
+    where: where,
+  });
+
+  return users;
+};
+
+export const findOneWithoutPassword = async (
+  where: Prisma.UserWhereUniqueInput
+): Promise<Omit<User, 'password'> | null> => {
+  return prisma.user.findUnique({
+    where,
+    omit: {
+      password: true,
+    },
+  });
+};
+
+export const findOneWithPassword = async (
+  where: Prisma.UserWhereUniqueInput
+): Promise<User | null> => {
+  return prisma.user.findUnique({
+    where,
+  });
+};
+
+export const findUserById = async (id: string): Promise<User | null> => {
+  return prisma.user.findUnique({
+    where: { id },
+  });
+};
+
+export const create = async (data: {
   firstName: string;
   lastName: string;
   email: string;
   phone?: string;
   password: string;
   role: 'user' | 'platform_admin' | 'restaurant_user';
-}): Promise<CreateUserResponseBodyDTO> => {
-  const existingUser = await prisma.user.findUnique({
-    where: { email: data.email },
+}): Promise<Omit<User, 'password'>> => {
+  const existingUser = await findOneWithoutPassword({
+    email: data.email,
   });
 
   if (existingUser) {
-    throw new BadRequestError('Email already in use');
+    throw new ConflictError('Email already in use');
   }
+
   const hashedPassword = await hashPassword(data.password);
-  data.password = hashedPassword;
 
-  const newUser = await prisma.user.create({
-    data,
+  const createdUser = await prisma.user.create({
+    data: {
+      ...data,
+      password: hashedPassword,
+    },
   });
-
-  return {
-    message: 'User created successfully',
-    user: excludePassword(newUser),
-  };
+  const { password: _, ...userWithoutPassword } = createdUser;
+  return userWithoutPassword;
 };
 
 export const updateUserPartially = async (
   userId: string,
-  data: Partial<{ firstName: string; lastName: string; email: string; phone?: string }>
-) => {
-  if (!userId) {
-    throw new BadRequestError('User ID is required');
-  }
+  data: Partial<{
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    role: 'user' | 'platform_admin' | 'restaurant_user';
+    password: string;
+  }>
+): Promise<Omit<User, 'password'> | null> => {
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data,
+    });
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-  });
-
-  if (!user || user.deletedAt) {
+    return updatedUser;
+  } catch {
     throw new NotFoundError('User not found');
   }
-
-  const updatedUser = await prisma.user.update({
-    where: { id: userId },
-    data,
-  });
-
-  return excludePassword(updatedUser);
 };
 
 export const softDeleteUser = async (userId: string) => {

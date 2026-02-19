@@ -1,80 +1,164 @@
 import { Request, Response, NextFunction } from 'express';
 import type {
   GetAllUsersResponseBodyDTO,
-  GetSingleUserRequestParamsDTO,
   GetSingleUserResponseBodyDTO,
-  UpdateUserRequestParamsDTO,
   UpdateUserRequestBodyDTO,
   UpdateUserResponseBodyDTO,
-  DeleteUserRequestParamsDTO,
   DeleteUserResponseBodyDTO,
   CreateUserRequestBodyDTO,
   CreateUserResponseBodyDTO,
 } from '../dtos/user.dto';
-import { CommonResponseDTO } from '../dtos/common.dto';
-import {
-  findUserById,
-  getAll,
-  updateUserPartially,
-  softDeleteUser,
-  createUser,
-} from '../services/users.database.service';
+import { CommonResponseDTO, IdRequestPathParamsDTO } from '../dtos/common.dto';
+import * as usersDatabaseService from '../services/users.database.service';
+import { HttpStatusCode } from 'axios';
+import { NotFoundError } from '../utils/errors';
 
 export const getAllUsers = async (
-  _req: Request,
+  _req: Request, // TODO: add query params for filtering, pagination, etc.
   res: Response<CommonResponseDTO<GetAllUsersResponseBodyDTO>>,
   next: NextFunction
 ) => {
   try {
-    const users = await getAll();
-    res.status(200).json({ success: true, message: 'Users retrieved successfully', data: users });
+    const users = await usersDatabaseService.findManyWithoutPassword({ deletedAt: null });
+    console.log({
+      message: 'getAllUsers',
+      data: { count: users.length }, // TODO: log more info about pagination, filtering, etc. when implemented
+    });
+    res.status(HttpStatusCode.Ok).json({
+      success: true,
+      message: 'Users retrieved successfully',
+      data: users,
+    });
   } catch (error) {
+    console.log({
+      message: 'getAllUsers error',
+      data: { error },
+    });
     next(error);
   }
 };
 
 export const getSingleUser = async (
-  req: Request<GetSingleUserRequestParamsDTO>,
-  res: Response<CommonResponseDTO<GetSingleUserResponseBodyDTO>>
+  req: Request<IdRequestPathParamsDTO, CommonResponseDTO<GetSingleUserResponseBodyDTO>>,
+  res: Response<CommonResponseDTO<GetSingleUserResponseBodyDTO>>,
+  next: NextFunction
 ) => {
-  const userId = req.params.id;
-  const user = await findUserById(userId);
-  res.status(200).json({ success: true, message: 'User retrieved successfully', data: user });
+  try {
+    const userId = req.params.id;
+
+    const foundUser = await usersDatabaseService.findOneWithoutPassword({
+      id: userId,
+      deletedAt: null,
+    });
+
+    console.log({
+      message: 'foundUser',
+      data: {
+        id: foundUser?.id,
+      },
+    });
+
+    if (!foundUser || foundUser.deletedAt) {
+      throw new NotFoundError('User not found');
+    }
+
+    res.status(HttpStatusCode.Ok).json({
+      success: true,
+      message: 'User retrieved successfully',
+      data: foundUser,
+    });
+  } catch (error) {
+    console.log({
+      message: 'getSingleUser error',
+      data: { error },
+    });
+    next(error);
+  }
 };
 
-export const CreateUser = async (
-  req: Request<unknown, CreateUserResponseBodyDTO, CreateUserRequestBodyDTO>,
-  res: Response<CommonResponseDTO<CreateUserResponseBodyDTO>>
+export const createUser = async (
+  req: Request<unknown, CommonResponseDTO<CreateUserResponseBodyDTO>, CreateUserRequestBodyDTO>,
+  res: Response<CommonResponseDTO<CreateUserResponseBodyDTO>>,
+  next: NextFunction
 ) => {
-  const user = await createUser(req.body);
-  res.status(201).json({
-    success: true,
-    message: 'User created successfully',
-    data: user,
-  });
+  try {
+    console.log({
+      message: 'createUser',
+      data: {
+        email: req.body.email,
+        role: req.body.role,
+      },
+    });
+
+    const createdUser = await usersDatabaseService.create({
+      email: req.body.email,
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      phone: req.body.phone,
+      role: req.body.role,
+      password: req.body.password,
+    });
+
+    console.log({
+      message: 'createUser',
+      data: {
+        id: createdUser.id,
+      },
+    });
+
+    res.status(HttpStatusCode.Created).json({
+      success: true,
+      message: 'User created successfully',
+      data: createdUser,
+    });
+  } catch (error) {
+    console.log({
+      message: 'createUser error',
+      data: { error },
+    });
+    next(error);
+  }
 };
 
 export const updateUser = async (
-  req: Request<UpdateUserRequestParamsDTO, UpdateUserResponseBodyDTO, UpdateUserRequestBodyDTO>,
-  res: Response<CommonResponseDTO<UpdateUserResponseBodyDTO>>
+  req: Request<IdRequestPathParamsDTO, UpdateUserResponseBodyDTO, UpdateUserRequestBodyDTO>,
+  res: Response<CommonResponseDTO<UpdateUserResponseBodyDTO>>,
+  next: NextFunction
 ) => {
-  const userId = req.params.id;
-  const user = await updateUserPartially(userId, req.body);
-  res.status(200).json({
-    success: true,
-    message: 'User updated successfully',
-    data: {
+  try {
+    const userId = req.params.id;
+    const user = await usersDatabaseService.updateUserPartially(userId, req.body);
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+    res.status(200).json({
+      success: true,
       message: 'User updated successfully',
-      user: user,
-    },
-  });
+      data: user,
+    });
+    console.log({
+      message: 'updateUser',
+      data: { userId },
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const deleteUser = async (
-  req: Request<DeleteUserRequestParamsDTO, DeleteUserResponseBodyDTO, unknown>,
-  res: Response<CommonResponseDTO<DeleteUserResponseBodyDTO>>
+  req: Request<IdRequestPathParamsDTO, DeleteUserResponseBodyDTO, unknown>,
+  res: Response<CommonResponseDTO<DeleteUserResponseBodyDTO>>,
+  next: NextFunction
 ) => {
-  const userId = req.params.id;
-  await softDeleteUser(userId);
-  res.status(204).json({ success: true, message: 'User deleted successfully' });
+  try {
+    const userId = req.params.id;
+    await usersDatabaseService.softDeleteUser(userId);
+    res.status(204).json({ success: true, message: 'User deleted successfully' });
+    console.log({
+      message: 'deleteUser',
+      data: { userId },
+    });
+  } catch (error) {
+    next(error);
+  }
 };

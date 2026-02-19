@@ -20,7 +20,7 @@ model User {
   deletedAt DateTime?
   restaurantUsers RestaurantUser[]
   refreshTokens  RefreshToken[]
-  passwordResets PasswordReset[]
+  passwordResets PasswordResetToken[]
 }
 
 model RestaurantUser {
@@ -44,7 +44,7 @@ model RefreshToken {
   createdAt DateTime @default(now())
 }
 
-model PasswordReset {
+model PasswordResetToken {
   id        String   @id @default(uuid())
   token     String   @unique
   userId    String
