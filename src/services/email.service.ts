@@ -1,25 +1,19 @@
 import nodemailer from 'nodemailer';
-import dotenv from 'dotenv';
 import { resetPasswordTemplate } from '../templates/reset-password';
-import { mailConfig } from '../config/mail.config';
-dotenv.config();
+import { environment } from '../config/environment';
 
-const companyName = mailConfig.companyName;
-const companyEmail = mailConfig.companyEmail;
-const logoUrl = mailConfig.logoUrl;
-const supportEmail = mailConfig.supportEmail;
-const appUrl = mailConfig.appUrl;
-
-if (!companyName || !companyEmail || !logoUrl || !supportEmail || !appUrl) {
-  throw new Error('Mail configuration missing');
-}
+const companyName = environment.mail.companyName;
+const companyEmail = environment.mail.companyEmail;
+const logoUrl = environment.mail.logoUrl;
+const supportEmail = environment.mail.supportEmail;
+const appUrl = environment.mail.appUrl;
 
 const transporter = nodemailer.createTransport({
-  host: mailConfig.smtp.host,
-  port: mailConfig.smtp.port,
+  host: environment.mail.smtp.host,
+  port: environment.mail.smtp.port,
   auth: {
-    user: mailConfig.smtp.user,
-    pass: mailConfig.smtp.pass,
+    user: environment.mail.smtp.user,
+    pass: environment.mail.smtp.pass,
   },
 });
 

@@ -6,8 +6,6 @@ WORKDIR /app
 FROM base as deps
 COPY package.json ./
 RUN npm install
-################################################################################
-# Build the application
 FROM deps as build
 COPY tsconfig.json ./
 COPY prisma ./prisma
@@ -15,12 +13,9 @@ COPY src ./src
 RUN npx prisma generate
 RUN npm run build
 
-################################################################################
-# Production image
 FROM base AS final
 ENV NODE_ENV=production
 
-# Install Doppler CLI as root
 RUN apk add --no-cache curl gnupg \
     && curl -Ls https://cli.doppler.com/install.sh | sh
 

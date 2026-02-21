@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { AppError, ValidationError } from '../utils/errors';
 import { logger } from '../utils/logger';
-import { isProduction } from '../config';
+import { environment, EnvironmentEnum } from '../config/environment';
 import { Prisma } from '@prisma/client';
 
 interface ErrorResponse {
@@ -31,7 +31,7 @@ export function errorHandler(err: Error, _req: Request, res: Response, _next: Ne
       response.errors = err.errors;
     }
 
-    if (!isProduction) {
+    if (environment.env !== EnvironmentEnum.Production) {
       response.stack = err.stack;
     }
 
@@ -87,10 +87,10 @@ export function errorHandler(err: Error, _req: Request, res: Response, _next: Ne
   // Handle unknown errors
   const response: ErrorResponse = {
     success: false,
-    message: isProduction ? 'Internal Server Error' : err.message,
+    message: environment.env === EnvironmentEnum.Production ? 'Internal Server Error' : err.message,
   };
 
-  if (!isProduction) {
+  if (environment.env !== EnvironmentEnum.Production) {
     response.stack = err.stack;
   }
 

@@ -1,5 +1,5 @@
 import jwt, { JwtPayload, SignOptions } from 'jsonwebtoken';
-import { config } from '../config';
+import { environment } from '../config/environment';
 import { StringValue } from 'ms';
 import crypto from 'crypto';
 
@@ -16,20 +16,20 @@ export interface RefreshTokenPayload extends JwtPayload {
 
 export function generateAccessToken(payload: Omit<TokenPayload, 'iat' | 'exp'>): string {
   const options: SignOptions = {
-    expiresIn: config.jwt.expiresIn as StringValue,
+    expiresIn: environment.jwt.expiresIn as StringValue,
   };
-  return jwt.sign(payload, config.jwt.secret, options);
+  return jwt.sign(payload, environment.jwt.secret, options);
 }
 
 export function generateRefreshToken(payload: Omit<RefreshTokenPayload, 'iat' | 'exp'>): string {
   const options: SignOptions = {
-    expiresIn: config.jwt.refreshExpiresIn as StringValue,
+    expiresIn: environment.jwt.refreshExpiresIn as StringValue,
   };
-  return jwt.sign(payload, config.jwt.secret, options);
+  return jwt.sign(payload, environment.jwt.secret, options);
 }
 
 export function verifyToken<T extends JwtPayload>(token: string): T {
-  return jwt.verify(token, config.jwt.secret) as T;
+  return jwt.verify(token, environment.jwt.secret) as T;
 }
 
 export function decodeToken<T extends JwtPayload>(token: string): T | null {

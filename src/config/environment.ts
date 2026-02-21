@@ -1,9 +1,29 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-interface Config {
+interface MailConfig {
+  smtp: {
+    host: string;
+    port: number;
+    user: string;
+    pass: string;
+  };
+  companyName: string;
+  companyEmail: string;
+  logoUrl: string;
+  supportEmail: string;
+  appUrl: string;
+}
+
+export enum EnvironmentEnum {
+  Development = 'development',
+  Production = 'production',
+  Test = 'test',
+}
+
+interface Environment {
   port: number;
-  nodeEnv: string;
+  env: EnvironmentEnum;
   databaseUrl: string;
   jwt: {
     secret: string;
@@ -12,12 +32,13 @@ interface Config {
   };
   auth: {
     serviceUrl: string;
-    validationMode: 'local' | 'remote';
   };
   logging: {
     level: string;
   };
   authApiKey: string;
+  serviceName: string;
+  mail: MailConfig;
 }
 
 function requireEnv(name: string): string {
@@ -32,9 +53,9 @@ function optionalEnv(name: string, defaultValue: string): string {
   return process.env[name] || defaultValue;
 }
 
-export const config: Config = {
+export const environment: Environment = {
   port: Number.parseInt(optionalEnv('PORT', '3000'), 10),
-  nodeEnv: optionalEnv('NODE_ENV', 'development'),
+  env: optionalEnv('NODE_ENV', 'development') as EnvironmentEnum,
   databaseUrl: requireEnv('DATABASE_URL'),
   jwt: {
     secret: requireEnv('JWT_SECRET'),
@@ -43,13 +64,23 @@ export const config: Config = {
   },
   auth: {
     serviceUrl: optionalEnv('AUTH_SERVICE_URL', 'http://localhost:3001'),
-    validationMode: optionalEnv('AUTH_VALIDATION_MODE', 'local') as 'local' | 'remote',
   },
   logging: {
     level: optionalEnv('LOG_LEVEL', 'info'),
   },
   authApiKey: requireEnv('AUTH_API_KEY'),
+  mail: {
+    smtp: {
+      host: requireEnv('MAIL_HOST'),
+      port: Number(requireEnv('SMTP_PORT')),
+      user: requireEnv('SMTP_USER'),
+      pass: requireEnv('SMTP_PASS'),
+    },
+    companyName: requireEnv('COMPANY_NAME'),
+    companyEmail: requireEnv('COMPANY_EMAIL'),
+    logoUrl: requireEnv('LOGO_URL'),
+    supportEmail: requireEnv('SUPPORT_EMAIL'),
+    appUrl: requireEnv('APP_URL'),
+  },
+  serviceName: requireEnv('SERVICE_NAME'),
 };
-
-export const isDevelopment = config.nodeEnv === 'development';
-export const isProduction = config.nodeEnv === 'production';
