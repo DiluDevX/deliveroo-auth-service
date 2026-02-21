@@ -19,7 +19,8 @@
     "prisma:migrate:production": "doppler run -p deliveroo-auth-service -c prd -- prisma migrate deploy",
     "prisma:studio": "doppler run -- prisma studio",
     "prisma:push": "doppler run -- prisma db push",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepare": "husky"
   },
   "keywords": [
     "microservice",
@@ -63,6 +64,7 @@
     "@types/swagger-ui-express": "^4.1.8",
     "@types/uuid": "^10.0.0",
     "eslint": "^9.18.0",
+    "husky": "^9.1.7",
     "globals": "^15.14.0",
     "nodemon": "^3.1.9",
     "pino": "^9.6.0",

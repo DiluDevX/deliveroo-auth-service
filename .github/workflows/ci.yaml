@@ -4,7 +4,7 @@ on:
   push:
     branches: [main, develop]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
 
 # Skip CI on template repo - remove this line when using the template
 env:
@@ -15,7 +15,7 @@ jobs:
     # Skip if this is the template repository
     if: github.repository != 'DiluDevX/microservice-template'
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,7 +37,6 @@ jobs:
       - name: Run ESLint
         run: yarn lint
 
-    if: github.repository != 'DiluDevX/microservice-template'
       - name: Run TypeScript type check
         run: yarn typecheck
 

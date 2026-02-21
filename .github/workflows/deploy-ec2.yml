@@ -2,8 +2,7 @@ name: Deploy To EC2
 
 on:
   release:
-    types:
-      - published
+    types: [published]
   workflow_dispatch:
 
 concurrency:
