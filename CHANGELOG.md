@@ -1,3 +1,10 @@
+# [1.0.0-beta.4](https://github.com/DiluDevX/deliveroo-auth-service/compare/v1.0.0-beta.3...v1.0.0-beta.4) (2026-02-21)
+
+
+### Bug Fixes
+
+* add missing DOPPLER_TOKEN environment variable to CI jobs ([f5d8c11](https://github.com/DiluDevX/deliveroo-auth-service/commit/f5d8c1196d881956bc446806ca842445b9cff17b))
+
 # [1.0.0-beta.3](https://github.com/DiluDevX/deliveroo-auth-service/compare/v1.0.0-beta.2...v1.0.0-beta.3) (2026-02-21)
 
 
