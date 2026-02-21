@@ -7,6 +7,8 @@ ARG APP_VERSION=0.0.0-dev
 ENV APP_VERSION=$APP_VERSION
 ARG DATABASE_URL=postgresql://user:pass@localhost:5432/app
 ENV DATABASE_URL=$DATABASE_URL
+ARG DOPPLER_TOKEN
+ENV DOPPLER_TOKEN=$DOPPLER_TOKEN
 
 WORKDIR /usr/app
 
@@ -14,10 +16,10 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY prisma ./prisma
-RUN npx prisma generate
+RUN doppler run -- npx prisma generate
 
 COPY . .
-RUN npm run build
+RUN doppler run -- npm run build
 
 FROM node:24.11.1-alpine
 

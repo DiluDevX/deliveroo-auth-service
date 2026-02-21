@@ -95,3 +95,5 @@ jobs:
           tags: microservice:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            DOPPLER_TOKEN=${{ secrets.DOPPLER_TOKEN }}
