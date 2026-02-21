@@ -13,6 +13,6 @@ LICENSE
 docker-compose.yml
 Dockerfile
 eslint.config.js
-package-lock.json
 tsconfig.json
-
+node_modules
+dist

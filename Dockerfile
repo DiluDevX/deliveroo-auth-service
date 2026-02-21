@@ -1,30 +1,50 @@
 # syntax=docker/dockerfile:1.7
-FROM node:24.11.1-alpine
+FROM node:24.11.1-alpine AS builder
 
-# environment
 ARG ENV=development
-
 ENV NODE_ENV=$ENV
+ARG APP_VERSION=0.0.0-dev
+ENV APP_VERSION=$APP_VERSION
+ARG DATABASE_URL=postgresql://user:pass@localhost:5432/app
+ENV DATABASE_URL=$DATABASE_URL
 
-# Working directory
 WORKDIR /usr/app
 
-# Copy all files
-COPY . .
+COPY package.json package-lock.json ./
+RUN npm ci
 
-# Install doppler CLI for secrets management
+COPY prisma ./prisma
+RUN npx prisma generate
+
+COPY . .
+RUN npm run build
+
+FROM node:24.11.1-alpine
+
+ARG ENV=development
+ENV NODE_ENV=$ENV
+ARG APP_VERSION=0.0.0-dev
+ENV APP_VERSION=$APP_VERSION
+
+WORKDIR /usr/app
+
+LABEL org.opencontainers.image.version=$APP_VERSION
+
 RUN apk add --no-cache curl gnupg \
     && curl -Ls https://cli.doppler.com/install.sh | sh
 
-# Generate Prisma Client
-RUN --mount=type=secret,id=doppler_token \
-    DOPPLER_TOKEN="$(cat /run/secrets/doppler_token)" npm run prisma:generate
+COPY --from=builder /usr/app/package.json ./package.json
+COPY --from=builder /usr/app/package-lock.json ./package-lock.json
+COPY --from=builder /usr/app/node_modules ./node_modules
+COPY --from=builder /usr/app/dist ./dist
+COPY --from=builder /usr/app/prisma ./prisma
+COPY docker-entrypoint.sh ./docker-entrypoint.sh
 
-# Set the user
+RUN chmod +x ./docker-entrypoint.sh \
+    && chown -R node:node /usr/app
+
 USER node
 
-# Expose the port the app runs on
 EXPOSE 80
 
-# Run migrations and start the application
 CMD ["./docker-entrypoint.sh"]
