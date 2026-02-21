@@ -17,9 +17,22 @@ model User {
   role      Role     @default(user)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
+  deletedAt DateTime?
+  restaurantUsers RestaurantUser[]
   refreshTokens  RefreshToken[]
-  passwordResets PasswordReset[]
+  passwordResets PasswordResetToken[]
+}
+
+model RestaurantUser {
+  id           String   @id @default(uuid())
+  role         RestaurantRole @default(employee)
+  restaurantId String
+  userId       String
+  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, restaurantId])
 }
 
 model RefreshToken {
@@ -31,7 +44,7 @@ model RefreshToken {
   createdAt DateTime @default(now())
 }
 
-model PasswordReset {
+model PasswordResetToken {
   id        String   @id @default(uuid())
   token     String   @unique
   userId    String
@@ -42,5 +55,13 @@ model PasswordReset {
 
 enum Role {
   user
+  platform_admin
+  restaurant_user
+}
+
+enum RestaurantRole {
+  employee
+  super_admin
   admin
+  finance
 }

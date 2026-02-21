@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
 import { AppError, ValidationError } from '../utils/errors';
 import { logger } from '../utils/logger';
-import { isProduction } from '../config';
+import { environment, EnvironmentEnum } from '../config/environment';
 import { Prisma } from '@prisma/client';
-
+import HttpStatusCodes from 'http-status-codes';
 interface ErrorResponse {
   success: false;
   message: string;
@@ -31,7 +31,7 @@ export function errorHandler(err: Error, _req: Request, res: Response, _next: Ne
       response.errors = err.errors;
     }
 
-    if (!isProduction) {
+    if (environment.env !== EnvironmentEnum.Production) {
       response.stack = err.stack;
     }
 
@@ -46,20 +46,18 @@ export function errorHandler(err: Error, _req: Request, res: Response, _next: Ne
     if (prismaError.code === 'P2002') {
       const target = prismaError.meta?.target;
       const field = Array.isArray(target) ? target[0] : target;
-      res.status(409).json({
+      res.status(HttpStatusCodes.CONFLICT).json({
         success: false,
         message: 'A record with this value already exists',
-        code: 'DUPLICATE_ENTRY',
         field: field,
       });
       return;
     }
 
     if (prismaError.code === 'P2025') {
-      res.status(404).json({
+      res.status(HttpStatusCodes.NOT_FOUND).json({
         success: false,
         message: 'Record not found',
-        code: 'NOT_FOUND',
       });
       return;
     }
@@ -67,19 +65,17 @@ export function errorHandler(err: Error, _req: Request, res: Response, _next: Ne
 
   // Handle JWT errors
   if (err.name === 'JsonWebTokenError') {
-    res.status(401).json({
+    res.status(HttpStatusCodes.UNAUTHORIZED).json({
       success: false,
       message: 'Invalid token',
-      code: 'INVALID_TOKEN',
     });
     return;
   }
 
   if (err.name === 'TokenExpiredError') {
-    res.status(401).json({
+    res.status(HttpStatusCodes.UNAUTHORIZED).json({
       success: false,
       message: 'Token expired',
-      code: 'TOKEN_EXPIRED',
     });
     return;
   }
@@ -87,12 +83,12 @@ export function errorHandler(err: Error, _req: Request, res: Response, _next: Ne
   // Handle unknown errors
   const response: ErrorResponse = {
     success: false,
-    message: isProduction ? 'Internal Server Error' : err.message,
+    message: environment.env === EnvironmentEnum.Production ? 'Internal Server Error' : err.message,
   };
 
-  if (!isProduction) {
+  if (environment.env !== EnvironmentEnum.Production) {
     response.stack = err.stack;
   }
 
-  res.status(500).json(response);
+  res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json(response);
 }

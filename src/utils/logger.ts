@@ -1,20 +1,21 @@
 import pino from 'pino';
-import { config, isDevelopment } from '../config';
+import { environment } from '../config/environment';
 
 export const logger = pino({
-  level: config.logging.level,
-  transport: isDevelopment
-    ? {
-        target: 'pino-pretty',
-        options: {
-          colorize: true,
-          translateTime: 'SYS:standard',
-          ignore: 'pid,hostname',
+  level: environment.logging.level,
+  transport:
+    environment.env === 'production'
+      ? undefined
+      : {
+          target: 'pino-pretty',
+          options: {
+            colorize: true,
+            translateTime: 'SYS:standard',
+            ignore: 'pid,hostname',
+          },
         },
-      }
-    : undefined,
   base: {
-    service: process.env.SERVICE_NAME || 'microservice',
+    service: environment.serviceName,
   },
 });
 
