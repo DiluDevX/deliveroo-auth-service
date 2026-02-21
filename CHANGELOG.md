@@ -1,3 +1,10 @@
+# [1.0.0-beta.2](https://github.com/DiluDevX/deliveroo-auth-service/compare/v1.0.0-beta.1...v1.0.0-beta.2) (2026-02-21)
+
+
+### Features
+
+* add installation step for Doppler CLI in CI workflow ([94839a3](https://github.com/DiluDevX/deliveroo-auth-service/commit/94839a327332bc8862fb550b6345b554f5fa280e))
+
 # 1.0.0-beta.1 (2026-02-21)
 
 
