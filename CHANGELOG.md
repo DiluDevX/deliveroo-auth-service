@@ -1,3 +1,10 @@
+# [1.0.0-beta.6](https://github.com/DiluDevX/deliveroo-auth-service/compare/v1.0.0-beta.5...v1.0.0-beta.6) (2026-02-21)
+
+
+### Bug Fixes
+
+* install Doppler CLI in the Dockerfile build stage ([702bfe5](https://github.com/DiluDevX/deliveroo-auth-service/commit/702bfe56de7c288fbde1b014653011dbbc2268ed))
+
 # [1.0.0-beta.5](https://github.com/DiluDevX/deliveroo-auth-service/compare/v1.0.0-beta.4...v1.0.0-beta.5) (2026-02-21)
 
 ### Bug Fixes
