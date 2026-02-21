@@ -27,8 +27,8 @@ interface Environment {
   databaseUrl: string;
   jwt: {
     secret: string;
-    expiresIn: string;
-    refreshExpiresIn: string;
+    expiresInMinutes: number;
+    refreshExpiresInDays: number;
   };
   auth: {
     serviceUrl: string;
@@ -59,8 +59,8 @@ export const environment: Environment = {
   databaseUrl: requireEnv('DATABASE_URL'),
   jwt: {
     secret: requireEnv('JWT_SECRET'),
-    expiresIn: optionalEnv('JWT_EXPIRES_IN', '15m'),
-    refreshExpiresIn: optionalEnv('JWT_REFRESH_EXPIRES_IN', '7d'),
+    expiresInMinutes: Number(optionalEnv('JWT_EXPIRES_IN', '15')),
+    refreshExpiresInDays: Number(optionalEnv('JWT_REFRESH_EXPIRES_IN', '7')),
   },
   auth: {
     serviceUrl: optionalEnv('AUTH_SERVICE_URL', 'http://localhost:3001'),

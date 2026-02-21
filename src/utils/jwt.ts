@@ -1,6 +1,5 @@
 import jwt, { JwtPayload, SignOptions } from 'jsonwebtoken';
 import { environment } from '../config/environment';
-import { StringValue } from 'ms';
 import crypto from 'crypto';
 
 export interface TokenPayload extends JwtPayload {
@@ -16,14 +15,14 @@ export interface RefreshTokenPayload extends JwtPayload {
 
 export function generateAccessToken(payload: Omit<TokenPayload, 'iat' | 'exp'>): string {
   const options: SignOptions = {
-    expiresIn: environment.jwt.expiresIn as StringValue,
+    expiresIn: `${environment.jwt.expiresInMinutes}m`,
   };
   return jwt.sign(payload, environment.jwt.secret, options);
 }
 
 export function generateRefreshToken(payload: Omit<RefreshTokenPayload, 'iat' | 'exp'>): string {
   const options: SignOptions = {
-    expiresIn: environment.jwt.refreshExpiresIn as StringValue,
+    expiresIn: `${environment.jwt.refreshExpiresInDays}d`,
   };
   return jwt.sign(payload, environment.jwt.secret, options);
 }

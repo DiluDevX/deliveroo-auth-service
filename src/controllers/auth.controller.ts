@@ -20,8 +20,8 @@ import {
 } from '../dtos/auth.dto';
 import { CommonResponseDTO } from '../dtos/common.dto';
 import { NotFoundError, UnauthorizedError } from '../utils/errors';
-import { HttpStatusCode } from 'axios';
 import { comparePasswords, hashPassword } from '../utils/password';
+import HttpStatusCodes from 'http-status-codes';
 
 export const checkEmail = async (
   req: Request<unknown, CheckEmailResponseBodyDTO, CheckEmailRequestBodyDTO>,
@@ -51,7 +51,7 @@ export const checkEmail = async (
       throw new NotFoundError('User not found');
     }
 
-    res.status(HttpStatusCode.Ok).json({
+    res.status(HttpStatusCodes.OK).json({
       success: false,
       message: 'User exists',
       data: {
@@ -100,7 +100,7 @@ export const signup = async (
       },
     });
 
-    res.status(HttpStatusCode.Created).json({
+    res.status(HttpStatusCodes.CREATED).json({
       message: 'User created',
       success: true,
       data: {
@@ -173,7 +173,7 @@ export const login = async (
       role: foundUser.role,
     });
 
-    res.status(HttpStatusCode.Ok).json({
+    res.status(HttpStatusCodes.OK).json({
       success: true,
       message: 'Login successful',
       data: {
@@ -204,7 +204,7 @@ export const logout = async (
 
     await refreshTokenDatabaseService.invalidateRefreshTokens(req.body.refreshToken);
 
-    res.status(HttpStatusCode.Ok).json({
+    res.status(HttpStatusCodes.OK).json({
       message: 'Logged out successfully',
       success: true,
     });
@@ -256,7 +256,7 @@ export const refreshToken = async (
       message: 'new tokens generated',
     });
 
-    res.status(HttpStatusCode.Ok).json({
+    res.status(HttpStatusCodes.OK).json({
       message: 'Token refreshed successfully',
       success: true,
       data: {
@@ -312,7 +312,7 @@ export const forgotPassword = async (
 
     await emailService.sendResetPasswordEmail(req.body.email, createdResetPasswordToken.token);
 
-    res.status(HttpStatusCode.Ok).json({
+    res.status(HttpStatusCodes.OK).json({
       message: 'Successfully requested',
       success: true,
     });
@@ -343,7 +343,7 @@ export const verifyResetPasswordToken = async (
       message: 'password reset token verified',
     });
 
-    res.status(HttpStatusCode.Ok).json({
+    res.status(HttpStatusCodes.OK).json({
       message: 'Password reset token is valid.',
       success: true,
     });
@@ -394,7 +394,7 @@ export const resetPassword = async (
 
     await resetPasswordTokenDatabaseService.deleteResetPasswordToken(req.body.token);
 
-    res.status(HttpStatusCode.Ok).json({
+    res.status(HttpStatusCodes.OK).json({
       message: 'Password reset successfully',
       success: true,
     });

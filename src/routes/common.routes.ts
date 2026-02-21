@@ -3,7 +3,7 @@ import rateLimit from 'express-rate-limit';
 import { version } from '../../package.json';
 import { prisma } from '../config/database';
 import { CommonResponseDTO, HealthCheckResponseBodyDTO } from '../dtos/common.dto';
-import { HttpStatusCode } from 'axios';
+import HttpStatusCode from 'http-status-codes';
 
 const router = Router();
 
@@ -44,7 +44,7 @@ router.get(
 );
 
 router.all('*', (_req, res: Response<CommonResponseDTO<never>>) => {
-  res.status(HttpStatusCode.NotFound).json({
+  res.status(HttpStatusCode.NOT_FOUND).json({
     message: 'Route not found',
     success: false,
   });

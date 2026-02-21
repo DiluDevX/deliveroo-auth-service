@@ -10,8 +10,8 @@ import type {
 } from '../dtos/user.dto';
 import { CommonResponseDTO, IdRequestPathParamsDTO } from '../dtos/common.dto';
 import * as usersDatabaseService from '../services/users.database.service';
-import { HttpStatusCode } from 'axios';
 import { NotFoundError } from '../utils/errors';
+import HttpStatusCodes from 'http-status-codes';
 
 export const getAllUsers = async (
   _req: Request, // TODO: add query params for filtering, pagination, etc.
@@ -24,7 +24,7 @@ export const getAllUsers = async (
       message: 'getAllUsers',
       data: { count: users.length }, // TODO: log more info about pagination, filtering, etc. when implemented
     });
-    res.status(HttpStatusCode.Ok).json({
+    res.status(HttpStatusCodes.OK).json({
       success: true,
       message: 'Users retrieved successfully',
       data: users,
@@ -62,7 +62,7 @@ export const getSingleUser = async (
       throw new NotFoundError('User not found');
     }
 
-    res.status(HttpStatusCode.Ok).json({
+    res.status(HttpStatusCodes.OK).json({
       success: true,
       message: 'User retrieved successfully',
       data: foundUser,
@@ -106,7 +106,7 @@ export const createUser = async (
       },
     });
 
-    res.status(HttpStatusCode.Created).json({
+    res.status(HttpStatusCodes.CREATED).json({
       success: true,
       message: 'User created successfully',
       data: createdUser,
@@ -131,7 +131,7 @@ export const updateUser = async (
     if (!user) {
       throw new NotFoundError('User not found');
     }
-    res.status(200).json({
+    res.status(HttpStatusCodes.OK).json({
       success: true,
       message: 'User updated successfully',
       data: user,
@@ -153,7 +153,10 @@ export const deleteUser = async (
   try {
     const userId = req.params.id;
     await usersDatabaseService.softDeleteUser(userId);
-    res.status(204).json({ success: true, message: 'User deleted successfully' });
+    res.status(HttpStatusCodes.OK).json({
+      success: true,
+      message: 'User deleted successfully',
+    });
     console.log({
       message: 'deleteUser',
       data: { userId },
