@@ -15,6 +15,8 @@ jobs:
     # Skip if this is the template repository
     if: github.repository != 'DiluDevX/microservice-template'
     runs-on: ubuntu-latest
+    env:
+      DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
 
     steps:
       - name: Checkout
@@ -46,6 +48,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     needs: lint-and-typecheck
+    env:
+      DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
 
     steps:
       - name: Checkout
