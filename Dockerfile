@@ -12,6 +12,9 @@ ENV DOPPLER_TOKEN=$DOPPLER_TOKEN
 
 WORKDIR /usr/app
 
+RUN apk add --no-cache curl gnupg \
+    && curl -Ls https://cli.doppler.com/install.sh | sh
+
 COPY package.json package-lock.json ./
 RUN npm ci
 
