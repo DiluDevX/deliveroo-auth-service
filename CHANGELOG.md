@@ -1,3 +1,10 @@
+# [1.0.0-beta.5](https://github.com/DiluDevX/deliveroo-auth-service/compare/v1.0.0-beta.4...v1.0.0-beta.5) (2026-02-21)
+
+
+### Bug Fixes
+
+* add DOPPLER_TOKEN as build argument in Dockerfile and CI configuration ([a011d3a](https://github.com/DiluDevX/deliveroo-auth-service/commit/a011d3a745e12554a0159dd9cc39026738aa7b37))
+
 # [1.0.0-beta.4](https://github.com/DiluDevX/deliveroo-auth-service/compare/v1.0.0-beta.3...v1.0.0-beta.4) (2026-02-21)
 
 
