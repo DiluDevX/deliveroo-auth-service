@@ -1,3 +1,10 @@
+# [1.0.0-beta.3](https://github.com/DiluDevX/deliveroo-auth-service/compare/v1.0.0-beta.2...v1.0.0-beta.3) (2026-02-21)
+
+
+### Bug Fixes
+
+* update Doppler CLI installation command to use sudo ([68b57fa](https://github.com/DiluDevX/deliveroo-auth-service/commit/68b57fa483bc66e6f35e0fcc487d6f065d9c0e02))
+
 # [1.0.0-beta.2](https://github.com/DiluDevX/deliveroo-auth-service/compare/v1.0.0-beta.1...v1.0.0-beta.2) (2026-02-21)
 
 
