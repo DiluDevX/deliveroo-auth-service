@@ -1,16 +1,6 @@
 import { z } from 'zod';
 import { emailSchema, passwordSchema } from './common.schema';
 
-export const signUpSchema = z.object({
-  firstName: z.string().min(1, 'First name is required').max(50, 'First name too long'),
-  lastName: z.string().min(1, 'Last name is required').max(50, 'Last name too long'),
-  email: emailSchema,
-  phone: z.string().optional(),
-  password: passwordSchema,
-  role: z.enum(['user', 'platform_admin', 'restaurant_user']).default('user'),
-  restaurantId: z.string().optional(),
-});
-
 export const loginRequestBodySchema = z.object({
   email: emailSchema,
   password: z.string().min(1, 'Password is required'),
@@ -42,7 +32,7 @@ export const logoutRequestBodySchema = z.object({
 
 export const resetPasswordRequestBodySchema = z.object({
   token: z.string().min(1, 'Token is required'),
-  newPassword: passwordSchema,
+  password: passwordSchema,
 });
 
 export const verifyResetPasswordTokenRequestBodySchema = z.object({

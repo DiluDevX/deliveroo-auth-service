@@ -19,13 +19,13 @@ export const generateNewTokens = async ({
   refreshToken: string;
 }> => {
   const accessToken = generateAccessToken({
-    sub: id,
+    userId: id,
     email,
     role,
   });
 
   const refreshToken = generateRefreshToken({
-    sub: id,
+    userId: id,
     email,
     role,
   });

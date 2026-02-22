@@ -5,6 +5,7 @@ import {
   loginRequestBodySchema,
   logoutRequestBodySchema,
   refreshTokenRequestBodySchema,
+  resetPasswordRequestBodySchema,
   signUpRequestBodySchema,
 } from '../schema/auth.schema';
 import { User } from '@prisma/client';
@@ -43,7 +44,4 @@ export type VerifyResetPasswordTokenRequestBodyDTO = {
   token: string;
 };
 
-export type ResetPasswordRequestBodyDTO = {
-  token: string;
-  password: string;
-};
+export type ResetPasswordRequestBodyDTO = z.infer<typeof resetPasswordRequestBodySchema>;

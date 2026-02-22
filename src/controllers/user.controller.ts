@@ -12,6 +12,7 @@ import { CommonResponseDTO, IdRequestPathParamsDTO } from '../dtos/common.dto';
 import * as usersDatabaseService from '../services/users.database.service';
 import { NotFoundError } from '../utils/errors';
 import HttpStatusCodes from 'http-status-codes';
+import { logger } from '../utils/logger';
 
 export const getAllUsers = async (
   _req: Request, // TODO: add query params for filtering, pagination, etc.
@@ -20,20 +21,17 @@ export const getAllUsers = async (
 ) => {
   try {
     const users = await usersDatabaseService.findManyWithoutPassword({ deletedAt: null });
-    console.log({
-      message: 'getAllUsers',
-      data: { count: users.length }, // TODO: log more info about pagination, filtering, etc. when implemented
-    });
+    logger.info({ count: users.length }, 'Users retrieved successfully');
     res.status(HttpStatusCodes.OK).json({
       success: true,
       message: 'Users retrieved successfully',
       data: users,
     });
   } catch (error) {
-    console.log({
-      message: 'getAllUsers error',
-      data: { error },
-    });
+    logger.error(
+      { error: error instanceof Error ? error.message : 'Unknown error' },
+      'Failed to retrieve users'
+    );
     next(error);
   }
 };
@@ -51,12 +49,7 @@ export const getSingleUser = async (
       deletedAt: null,
     });
 
-    console.log({
-      message: 'foundUser',
-      data: {
-        id: foundUser?.id,
-      },
-    });
+    logger.info({ userId }, 'User found');
 
     if (!foundUser || foundUser.deletedAt) {
       throw new NotFoundError('User not found');
@@ -68,10 +61,10 @@ export const getSingleUser = async (
       data: foundUser,
     });
   } catch (error) {
-    console.log({
-      message: 'getSingleUser error',
-      data: { error },
-    });
+    logger.error(
+      { error: error instanceof Error ? error.message : 'Unknown error' },
+      'Failed to retrieve user'
+    );
     next(error);
   }
 };
@@ -82,13 +75,7 @@ export const createUser = async (
   next: NextFunction
 ) => {
   try {
-    console.log({
-      message: 'createUser',
-      data: {
-        email: req.body.email,
-        role: req.body.role,
-      },
-    });
+    logger.info({ role: req.body.role }, 'Creating new user');
 
     const createdUser = await usersDatabaseService.create({
       email: req.body.email,
@@ -99,12 +86,7 @@ export const createUser = async (
       password: req.body.password,
     });
 
-    console.log({
-      message: 'createUser',
-      data: {
-        id: createdUser.id,
-      },
-    });
+    logger.info({ userId: createdUser.id }, 'User created successfully');
 
     res.status(HttpStatusCodes.CREATED).json({
       success: true,
@@ -112,10 +94,10 @@ export const createUser = async (
       data: createdUser,
     });
   } catch (error) {
-    console.log({
-      message: 'createUser error',
-      data: { error },
-    });
+    logger.error(
+      { error: error instanceof Error ? error.message : 'Unknown error' },
+      'Failed to create user'
+    );
     next(error);
   }
 };
@@ -136,11 +118,12 @@ export const updateUser = async (
       message: 'User updated successfully',
       data: user,
     });
-    console.log({
-      message: 'updateUser',
-      data: { userId },
-    });
+    logger.info({ userId }, 'User updated successfully');
   } catch (error) {
+    logger.error(
+      { error: error instanceof Error ? error.message : 'Unknown error' },
+      'Failed to update user'
+    );
     next(error);
   }
 };
@@ -157,11 +140,12 @@ export const deleteUser = async (
       success: true,
       message: 'User deleted successfully',
     });
-    console.log({
-      message: 'deleteUser',
-      data: { userId },
-    });
+    logger.info({ userId }, 'User deleted successfully');
   } catch (error) {
+    logger.error(
+      { error: error instanceof Error ? error.message : 'Unknown error' },
+      'Failed to delete user'
+    );
     next(error);
   }
 };

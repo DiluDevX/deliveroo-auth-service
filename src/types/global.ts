@@ -13,7 +13,7 @@ export interface IUser {
 
 export interface IRestaurantUser {
   id: string;
-  role: 'employee' | 'super-admin' | 'admin' | 'finance';
+  role: 'employee' | 'super_admin' | 'admin' | 'finance';
   restaurantId: string;
   userId: string;
 }

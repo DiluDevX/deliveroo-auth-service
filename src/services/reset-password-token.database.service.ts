@@ -35,16 +35,18 @@ export const createResetPasswordToken = async ({
   userId,
 }: {
   userId: string;
-}): Promise<PasswordResetToken> => {
+}): Promise<{ token: string; record: PasswordResetToken }> => {
   const token = crypto.randomBytes(32).toString('hex');
 
   const hashedToken = hashToken(token);
 
-  return prisma.passwordResetToken.create({
+  const record = await prisma.passwordResetToken.create({
     data: {
       token: hashedToken,
       userId,
       expiresAt: dayjs().add(1, 'hour').toDate(),
     },
   });
+
+  return { token, record };
 };

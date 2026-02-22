@@ -1,6 +1,6 @@
 import { Prisma, User } from '@prisma/client';
 import { prisma } from '../config/database';
-import { BadRequestError, ConflictError, NotFoundError } from '../utils/errors';
+import { BadRequestError, NotFoundError } from '../utils/errors';
 import { hashPassword } from '../utils/password';
 
 export const findManyWithoutPassword = async (
@@ -57,14 +57,6 @@ export const create = async (data: {
   password: string;
   role: 'user' | 'platform_admin' | 'restaurant_user';
 }): Promise<Omit<User, 'password'>> => {
-  const existingUser = await findOneWithoutPassword({
-    email: data.email,
-  });
-
-  if (existingUser) {
-    throw new ConflictError('Email already in use');
-  }
-
   const hashedPassword = await hashPassword(data.password);
 
   const createdUser = await prisma.user.create({
@@ -89,6 +81,10 @@ export const updateUserPartially = async (
   }>
 ): Promise<Omit<User, 'password'> | null> => {
   try {
+    if (data.password) {
+      data.password = await hashPassword(data.password);
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data,

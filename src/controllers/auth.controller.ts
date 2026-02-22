@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
+import { logger } from '../utils/logger';
 import * as authService from '../services/auth.service';
 import * as refreshTokenDatabaseService from '../services/refresh-token.database.service';
 import * as resetPasswordTokenDatabaseService from '../services/reset-password-token.database.service';
@@ -20,7 +21,7 @@ import {
 } from '../dtos/auth.dto';
 import { CommonResponseDTO } from '../dtos/common.dto';
 import { NotFoundError, UnauthorizedError } from '../utils/errors';
-import { comparePasswords, hashPassword } from '../utils/password';
+import { comparePasswords } from '../utils/password';
 import HttpStatusCodes from 'http-status-codes';
 
 export const checkEmail = async (
@@ -29,30 +30,20 @@ export const checkEmail = async (
   next: NextFunction
 ) => {
   try {
-    console.log({
-      message: 'checking email',
-      data: {
-        email: req.body.email,
-      },
-    });
+    logger.info('Checking email');
 
     const foundUser = await usersDatabaseService.findOneWithoutPassword({
       email: req.body.email,
     });
 
-    console.log({
-      message: 'found user',
-      data: {
-        id: foundUser?.id,
-      },
-    });
+    logger.info({ userId: foundUser?.id }, 'User found');
 
     if (!foundUser || foundUser.deletedAt) {
       throw new NotFoundError('User not found');
     }
 
     res.status(HttpStatusCodes.OK).json({
-      success: false,
+      success: true,
       message: 'User exists',
       data: {
         firstName: foundUser.firstName,
@@ -61,12 +52,10 @@ export const checkEmail = async (
       },
     });
   } catch (error) {
-    console.log({
-      message: 'check email error',
-      data: {
-        error,
-      },
-    });
+    logger.error(
+      { error: error instanceof Error ? error.message : 'Unknown error' },
+      'Failed to check email'
+    );
     next(error);
   }
 };
@@ -77,12 +66,7 @@ export const signup = async (
   next: NextFunction
 ) => {
   try {
-    console.log({
-      message: 'signup',
-      data: {
-        email: req.body.email,
-      },
-    });
+    logger.info({ role: 'user' }, 'Creating new user account');
 
     const createdUser = await usersDatabaseService.create({
       email: req.body.email,
@@ -93,12 +77,7 @@ export const signup = async (
       role: 'user',
     });
 
-    console.log({
-      message: 'created user',
-      data: {
-        id: createdUser.id,
-      },
-    });
+    logger.info({ userId: createdUser.id }, 'User account created successfully');
 
     res.status(HttpStatusCodes.CREATED).json({
       message: 'User created',
@@ -116,12 +95,10 @@ export const signup = async (
       },
     });
   } catch (error) {
-    console.log({
-      message: 'signup error',
-      data: {
-        error,
-      },
-    });
+    logger.error(
+      { error: error instanceof Error ? error.message : 'Unknown error' },
+      'Failed to create user account'
+    );
     next(error);
   }
 };
@@ -132,36 +109,19 @@ export const login = async (
   next: NextFunction
 ) => {
   try {
-    console.log({
-      message: 'login',
-      data: {
-        email: req.body.email,
-      },
-    });
+    logger.info('Login attempt');
 
     const foundUser = await usersDatabaseService.findOneWithPassword({
       email: req.body.email,
     });
 
-    console.log({
-      message: 'foundUser',
-      data: {
-        id: foundUser?.id,
-      },
-    });
+    logger.info({ userId: foundUser?.id }, 'User found');
 
     if (!foundUser || foundUser.deletedAt) {
       throw new UnauthorizedError('User not found');
     }
 
     const isPasswordValid = await comparePasswords(req.body.password, foundUser.password);
-
-    console.log({
-      message: 'isPasswordValid',
-      data: {
-        isPasswordValid,
-      },
-    });
 
     if (!isPasswordValid) {
       throw new UnauthorizedError('Invalid Password');
@@ -182,12 +142,10 @@ export const login = async (
       },
     });
   } catch (error) {
-    console.log({
-      message: 'login error',
-      data: {
-        error,
-      },
-    });
+    logger.error(
+      { error: error instanceof Error ? error.message : 'Unknown error' },
+      'Login failed'
+    );
     next(error);
   }
 };
@@ -198,9 +156,7 @@ export const logout = async (
   next: NextFunction
 ) => {
   try {
-    console.log({
-      message: 'logout',
-    });
+    logger.info('Logging out');
 
     await refreshTokenDatabaseService.invalidateRefreshTokens(req.body.refreshToken);
 
@@ -209,12 +165,10 @@ export const logout = async (
       success: true,
     });
   } catch (error) {
-    console.log({
-      message: 'logout error',
-      data: {
-        error,
-      },
-    });
+    logger.error(
+      { error: error instanceof Error ? error.message : 'Unknown error' },
+      'Logout failed'
+    );
     next(error);
   }
 };
@@ -225,26 +179,19 @@ export const refreshToken = async (
   next: NextFunction
 ) => {
   try {
-    console.log({
-      message: 'refreshToken',
-    });
+    logger.info('Refreshing token');
     const [foundUser, foundRefreshToken] = await authService.verifyRefreshToken(
       req.body.refreshToken
     );
 
-    console.log({
-      message: 'foundUser',
-      data: {
-        id: foundUser.id,
-        refreshTokenId: foundRefreshToken.id,
-      },
-    });
+    logger.info(
+      { userId: foundUser.id, refreshTokenId: foundRefreshToken.id },
+      'User and refresh token verified'
+    );
 
     await refreshTokenDatabaseService.invalidateRefreshTokens(req.body.refreshToken);
 
-    console.log({
-      message: 'token invalidated',
-    });
+    logger.info('Token invalidated');
 
     const { accessToken, refreshToken } = await authService.generateNewTokens({
       id: foundUser.id,
@@ -252,9 +199,7 @@ export const refreshToken = async (
       role: foundUser.role,
     });
 
-    console.log({
-      message: 'new tokens generated',
-    });
+    logger.info({ userId: foundUser.id }, 'New tokens generated');
 
     res.status(HttpStatusCodes.OK).json({
       message: 'Token refreshed successfully',
@@ -265,6 +210,10 @@ export const refreshToken = async (
       },
     });
   } catch (error) {
+    logger.error(
+      { error: error instanceof Error ? error.message : 'Unknown error' },
+      'Token refresh failed'
+    );
     next(error);
   }
 };
@@ -275,23 +224,13 @@ export const forgotPassword = async (
   next: NextFunction
 ) => {
   try {
-    console.log({
-      message: 'forgotPassword',
-      data: {
-        email: req.body.email,
-      },
-    });
+    logger.info('Forgot password request');
 
     const foundUser = await usersDatabaseService.findOneWithoutPassword({
       email: req.body.email,
     });
 
-    console.log({
-      message: 'foundUser',
-      data: {
-        id: foundUser?.id,
-      },
-    });
+    logger.info({ userId: foundUser?.id }, 'User found');
 
     if (!foundUser || foundUser.deletedAt) {
       throw new NotFoundError('User not found');
@@ -302,13 +241,13 @@ export const forgotPassword = async (
         userId: foundUser.id,
       });
 
-    console.log({
-      message: 'createdResetPasswordToken',
-      data: {
-        id: createdResetPasswordToken.id,
-        userId: createdResetPasswordToken.userId,
+    logger.info(
+      {
+        resetTokenId: createdResetPasswordToken.record.id,
+        userId: createdResetPasswordToken.record.userId,
       },
-    });
+      'Password reset token created'
+    );
 
     await emailService.sendResetPasswordEmail(req.body.email, createdResetPasswordToken.token);
 
@@ -317,12 +256,10 @@ export const forgotPassword = async (
       success: true,
     });
   } catch (error) {
-    console.log({
-      message: 'forgotPassword error',
-      data: {
-        error,
-      },
-    });
+    logger.error(
+      { error: error instanceof Error ? error.message : 'Unknown error' },
+      'Forgot password request failed'
+    );
     next(error);
   }
 };
@@ -333,27 +270,21 @@ export const verifyResetPasswordToken = async (
   next: NextFunction
 ) => {
   try {
-    console.log({
-      message: 'verifyResetPasswordToken',
-    });
+    logger.info('Verifying password reset token');
 
     await resetPasswordTokenDatabaseService.verifyResetPasswordToken(req.body.token);
 
-    console.log({
-      message: 'password reset token verified',
-    });
+    logger.info('Password reset token verified');
 
     res.status(HttpStatusCodes.OK).json({
       message: 'Password reset token is valid.',
       success: true,
     });
   } catch (error) {
-    console.log({
-      message: 'verifyResetPasswordToken error',
-      data: {
-        error,
-      },
-    });
+    logger.error(
+      { error: error instanceof Error ? error.message : 'Unknown error' },
+      'Password reset token verification failed'
+    );
     next(error);
   }
 };
@@ -364,33 +295,21 @@ export const resetPassword = async (
   next: NextFunction
 ) => {
   try {
-    console.log({
-      message: 'resetPassword',
-    });
+    logger.info('Resetting password');
 
     const foundResetPasswordToken =
       await resetPasswordTokenDatabaseService.verifyResetPasswordToken(req.body.token);
 
-    console.log({
-      message: 'foundResetPasswordToken',
-      data: {
-        id: foundResetPasswordToken.id,
-        userId: foundResetPasswordToken.userId,
-      },
-    });
-
-    const hashedPassword = await hashPassword(req.body.password);
+    logger.info(
+      { resetTokenId: foundResetPasswordToken.id, userId: foundResetPasswordToken.userId },
+      'Reset password token verified'
+    );
 
     await usersDatabaseService.updateUserPartially(foundResetPasswordToken.userId, {
-      password: hashedPassword,
+      password: req.body.password,
     });
 
-    console.log({
-      message: 'updated user',
-      data: {
-        id: foundResetPasswordToken.userId,
-      },
-    });
+    logger.info({ userId: foundResetPasswordToken.userId }, 'User password updated');
 
     await resetPasswordTokenDatabaseService.deleteResetPasswordToken(req.body.token);
 
@@ -399,12 +318,10 @@ export const resetPassword = async (
       success: true,
     });
   } catch (error) {
-    console.log({
-      message: 'resetPassword error',
-      data: {
-        error,
-      },
-    });
+    logger.error(
+      { error: error instanceof Error ? error.message : 'Unknown error' },
+      'Password reset failed'
+    );
     next(error);
   }
 };

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const idRequestPathParamsSchema = z.object({
-  id: z.string().min(1, 'User ID is required'),
+  id: z.string().uuid('User ID is required'),
 });
 
 export const commonRequestQueryParamsSchema = z.object({

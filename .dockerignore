@@ -13,6 +13,5 @@ LICENSE
 docker-compose.yml
 Dockerfile
 eslint.config.js
-tsconfig.json
 node_modules
 dist
