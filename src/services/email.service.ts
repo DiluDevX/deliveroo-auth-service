@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { resetPasswordTemplate } from '../templates/reset-password';
 import { environment } from '../config/environment';
 
@@ -8,14 +8,7 @@ const logoUrl = environment.mail.logoUrl;
 const supportEmail = environment.mail.supportEmail;
 const appUrl = environment.mail.appUrl;
 
-const transporter = nodemailer.createTransport({
-  host: environment.mail.smtp.host,
-  port: environment.mail.smtp.port,
-  auth: {
-    user: environment.mail.smtp.user,
-    pass: environment.mail.smtp.pass,
-  },
-});
+const resend = new Resend(environment.mail.resendApiKey);
 
 const sendMail = async ({
   to,
@@ -29,7 +22,7 @@ const sendMail = async ({
   html: string;
 }) => {
   try {
-    await transporter.sendMail({
+    await resend.emails.send({
       from,
       to,
       subject,

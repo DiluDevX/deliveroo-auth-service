@@ -13,6 +13,7 @@ interface MailConfig {
   logoUrl: string;
   supportEmail: string;
   appUrl: string;
+  resendApiKey: string;
 }
 
 export enum EnvironmentEnum {
@@ -81,6 +82,7 @@ export const environment: Environment = {
     logoUrl: requireEnv('LOGO_URL'),
     supportEmail: requireEnv('SUPPORT_EMAIL'),
     appUrl: requireEnv('APP_URL'),
+    resendApiKey: requireEnv('RESEND_API_KEY'),
   },
   serviceName: requireEnv('SERVICE_NAME'),
 };

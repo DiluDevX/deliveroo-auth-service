@@ -18,6 +18,8 @@ jobs:
     env:
       DEPLOY_ENV: ${{ github.event_name == 'release' && github.event.release.prerelease && 'development' || (github.ref_name == 'develop' && 'development' || 'production') }}
       APP_VERSION: ${{ github.event_name == 'release' && github.event.release.tag_name || github.sha }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
 
     steps:
       - name: Checkout
