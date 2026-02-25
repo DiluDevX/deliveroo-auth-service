@@ -2,17 +2,12 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 interface MailConfig {
-  smtp: {
-    host: string;
-    port: number;
-    user: string;
-    pass: string;
-  };
   companyName: string;
   companyEmail: string;
   logoUrl: string;
   supportEmail: string;
   appUrl: string;
+  resendApiKey: string;
 }
 
 export enum EnvironmentEnum {
@@ -70,17 +65,12 @@ export const environment: Environment = {
   },
   authApiKey: requireEnv('AUTH_API_KEY'),
   mail: {
-    smtp: {
-      host: requireEnv('MAIL_HOST'),
-      port: Number(requireEnv('SMTP_PORT')),
-      user: requireEnv('SMTP_USER'),
-      pass: requireEnv('SMTP_PASS'),
-    },
     companyName: requireEnv('COMPANY_NAME'),
     companyEmail: requireEnv('COMPANY_EMAIL'),
     logoUrl: requireEnv('LOGO_URL'),
     supportEmail: requireEnv('SUPPORT_EMAIL'),
     appUrl: requireEnv('APP_URL'),
+    resendApiKey: requireEnv('RESEND_API_KEY'),
   },
   serviceName: requireEnv('SERVICE_NAME'),
 };
