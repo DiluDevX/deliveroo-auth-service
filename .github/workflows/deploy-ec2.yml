@@ -5,6 +5,9 @@ on:
     types: [published]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
   group: deploy-ec2-${{ github.ref }}
   cancel-in-progress: true
@@ -12,7 +15,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && (github.ref_name == 'main' || github.ref_name == 'develop'))'
     environment:
       name: ${{ github.event_name == 'release' && github.event.release.prerelease && 'development' || (github.ref_name == 'develop' && 'development' || 'production') }}
     env:

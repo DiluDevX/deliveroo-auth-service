@@ -2,6 +2,7 @@ import { Prisma, User } from '@prisma/client';
 import { prisma } from '../config/database';
 import { BadRequestError, NotFoundError } from '../utils/errors';
 import { hashPassword } from '../utils/password';
+import { softDeleteAllRestaurantUserRecords } from './restaurantUser.service';
 
 export const findManyWithoutPassword = async (
   where: Prisma.UserWhereInput
@@ -55,7 +56,6 @@ export const create = async (data: {
   email: string;
   phone?: string;
   password: string;
-  role: 'user' | 'platform_admin' | 'restaurant_user';
 }): Promise<Omit<User, 'password'>> => {
   const hashedPassword = await hashPassword(data.password);
 
@@ -91,8 +91,11 @@ export const updateUserPartially = async (
     });
 
     return updatedUser;
-  } catch {
-    throw new NotFoundError('User not found');
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      throw new NotFoundError('User not found');
+    }
+    throw error;
   }
 };
 
@@ -101,19 +104,19 @@ export const softDeleteUser = async (userId: string) => {
     throw new BadRequestError('User ID is required');
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
+  const user = await findOneWithoutPassword({
+    id: userId,
   });
-
-  if (!user) {
-    throw new NotFoundError('User not found');
-  }
 
   // Perform soft delete by setting deletedAt timestamp
   await prisma.user.update({
     where: { id: userId },
     data: { deletedAt: new Date() },
   });
+
+  if (user && user.role === 'restaurant_user') {
+    await softDeleteAllRestaurantUserRecords(userId);
+  }
 
   return { success: true };
 };

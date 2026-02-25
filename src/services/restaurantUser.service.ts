@@ -1,5 +1,5 @@
 import { prisma } from '../config/database';
-import { BadRequestError } from '../utils/errors';
+import { BadRequestError, NotFoundError } from '../utils/errors';
 import { RestaurantRole } from '@prisma/client';
 import { findOneWithoutPassword } from './users.database.service';
 
@@ -20,7 +20,7 @@ export const updateRestaurantUserRole = async (
   if (user.role === 'restaurant_user') {
     updatedData.role = role;
   } else {
-    throw new BadRequestError('Restaurant_User Role is required');
+    throw new BadRequestError('restaurant_User Role is required');
   }
 
   const updated = await prisma.restaurantUser.findFirst({
@@ -40,4 +40,22 @@ export const updateRestaurantUserRole = async (
   });
 
   return result;
+};
+
+export const softDeleteAllRestaurantUserRecords = async (userId: string) => {
+  const updated = await prisma.restaurantUser.findMany({
+    where: {
+      userId: userId,
+    },
+  });
+
+  if (!updated) {
+    throw new NotFoundError('Restaurant user record not found');
+  }
+  updated.forEach(async (record) => {
+    await prisma.restaurantUser.update({
+      where: { id: record.id },
+      data: { deletedAt: new Date() },
+    });
+  });
 };

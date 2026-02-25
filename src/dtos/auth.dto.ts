@@ -27,7 +27,7 @@ export type LoginResponseBodyDTO = {
 
 export type SignUpRequestBodyDTO = z.infer<typeof signUpRequestBodySchema>;
 
-export type SignUpResponseBodyDTO = Omit<User, 'password'>;
+export type SignUpResponseBodyDTO = Omit<User, 'password' | 'deletedAt'>;
 
 export type ForgotPasswordRequestBodyDTO = z.infer<typeof forgotPasswordRequestBodySchema>;
 

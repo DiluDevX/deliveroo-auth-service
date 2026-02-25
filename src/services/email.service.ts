@@ -1,6 +1,7 @@
 import { Resend } from 'resend';
 import { resetPasswordTemplate } from '../templates/reset-password';
 import { environment } from '../config/environment';
+import { logger } from '../utils/logger';
 
 const companyName = environment.mail.companyName;
 const companyEmail = environment.mail.companyEmail;
@@ -21,17 +22,18 @@ const sendMail = async ({
   subject: string;
   html: string;
 }) => {
-  try {
-    await resend.emails.send({
-      from,
-      to,
-      subject,
-      html,
-    });
-  } catch (error) {
-    console.error('[MailService] Error sending email:', error);
-    throw error;
+  const { error } = await resend.emails.send({
+    from,
+    to,
+    subject,
+    html,
+  });
+
+  if (error) {
+    logger.error(error);
+    return;
   }
+  logger.info(`Email sent to ${to} with subject "${subject}"`);
 };
 
 export const sendResetPasswordEmail = async (to: string, token: string) => {
@@ -46,7 +48,7 @@ export const sendResetPasswordEmail = async (to: string, token: string) => {
   await sendMail({
     from: `${companyName} <${companyEmail}>`,
     to,
-    subject: 'Reset Your Deliveroo Password',
+    subject: `Reset Your ${companyName} Password`,
     html,
   });
 };

@@ -51,7 +51,7 @@ export const getSingleUser = async (
 
     logger.info({ userId }, 'User found');
 
-    if (!foundUser || foundUser.deletedAt) {
+    if (!foundUser) {
       throw new NotFoundError('User not found');
     }
 
@@ -75,14 +75,13 @@ export const createUser = async (
   next: NextFunction
 ) => {
   try {
-    logger.info({ role: req.body.role }, 'Creating new user');
+    logger.info({ role: 'user' }, 'Creating new user');
 
     const createdUser = await usersDatabaseService.create({
       email: req.body.email,
       firstName: req.body.firstName,
       lastName: req.body.lastName,
       phone: req.body.phone,
-      role: req.body.role,
       password: req.body.password,
     });
 

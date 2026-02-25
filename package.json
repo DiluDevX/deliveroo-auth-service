@@ -15,7 +15,7 @@
     "lint:check": "eslint src",
     "lint:fix": "eslint --fix src",
     "prisma:generate": "doppler run -- prisma generate",
-    "prisma:migrate:new": "prisma migrate dev",
+    "prisma:migrate:new": "doppler run -p deliveroo-auth-service -c dev -- prisma migrate dev",
     "prisma:migrate:development": "doppler run -p deliveroo-auth-service -c dev -- prisma migrate deploy",
     "prisma:migrate:production": "doppler run -p deliveroo-auth-service -c prd -- prisma migrate deploy",
     "prisma:studio": "doppler run -- prisma studio",
@@ -44,7 +44,8 @@
     "pg": "^8.17.2",
     "resend": "^6.9.2",
     "uuid": "^11.0.5",
-    "zod": "^3.25.76"
+    "zod": "^3.25.76",
+    "pino": "^9.6.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.4.2",

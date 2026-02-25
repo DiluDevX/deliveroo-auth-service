@@ -66,6 +66,13 @@ export const signup = async (
   next: NextFunction
 ) => {
   try {
+    const existingUser = await usersDatabaseService.findOneWithoutPassword({
+      email: req.body.email,
+    });
+
+    if (existingUser && !existingUser.deletedAt) {
+      throw new NotFoundError('User with this email already exists');
+    }
     logger.info({ role: 'user' }, 'Creating new user account');
 
     const createdUser = await usersDatabaseService.create({
@@ -74,7 +81,6 @@ export const signup = async (
       lastName: req.body.lastName,
       phone: req.body.phone,
       password: req.body.password,
-      role: 'user',
     });
 
     logger.info({ userId: createdUser.id }, 'User account created successfully');
@@ -91,7 +97,6 @@ export const signup = async (
         role: createdUser.role,
         createdAt: createdUser.createdAt,
         updatedAt: createdUser.updatedAt,
-        deletedAt: createdUser.deletedAt,
       },
     });
   } catch (error) {
@@ -118,13 +123,13 @@ export const login = async (
     logger.info({ userId: foundUser?.id }, 'User found');
 
     if (!foundUser || foundUser.deletedAt) {
-      throw new UnauthorizedError('User not found');
+      throw new UnauthorizedError('Invalid email or password');
     }
 
     const isPasswordValid = await comparePasswords(req.body.password, foundUser.password);
 
     if (!isPasswordValid) {
-      throw new UnauthorizedError('Invalid Password');
+      throw new UnauthorizedError('Invalid email or password');
     }
 
     const { accessToken, refreshToken } = await authService.generateNewTokens({
@@ -233,7 +238,11 @@ export const forgotPassword = async (
     logger.info({ userId: foundUser?.id }, 'User found');
 
     if (!foundUser || foundUser.deletedAt) {
-      throw new NotFoundError('User not found');
+      res.status(HttpStatusCodes.OK).json({
+        message: 'If you have an account with us, we will send you an email',
+        success: true,
+      });
+      return;
     }
 
     const createdResetPasswordToken =

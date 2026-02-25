@@ -24,6 +24,7 @@ interface Environment {
     secret: string;
     expiresInMinutes: number;
     refreshExpiresInDays: number;
+    resetPasswordExpiresInHours: number;
   };
   auth: {
     serviceUrl: string;
@@ -48,14 +49,34 @@ function optionalEnv(name: string, defaultValue: string): string {
   return process.env[name] || defaultValue;
 }
 
+const parsePositiveInt = (value: number, name: string): number => {
+  if (Number.isNaN(value) || value <= 0) {
+    throw new Error(`Invalid ${name} value: ${value}. Must be a positive integer.`);
+  }
+  return value;
+};
+
+const rawEnv = optionalEnv('NODE_ENV', 'development');
+const validEnvs = Object.values(EnvironmentEnum);
+if (!validEnvs.includes(rawEnv as EnvironmentEnum)) {
+  throw new Error(`Invalid NODE_ENV value: ${rawEnv}. Must be one of ${validEnvs.join(', ')}`);
+}
+
 export const environment: Environment = {
   port: Number.parseInt(optionalEnv('PORT', '3000'), 10),
-  env: optionalEnv('NODE_ENV', 'development') as EnvironmentEnum,
+  env: rawEnv as EnvironmentEnum,
   databaseUrl: requireEnv('DATABASE_URL'),
   jwt: {
     secret: requireEnv('JWT_SECRET'),
-    expiresInMinutes: Number(optionalEnv('JWT_EXPIRES_IN', '15')),
-    refreshExpiresInDays: Number(optionalEnv('JWT_REFRESH_EXPIRES_IN', '7')),
+    expiresInMinutes: parsePositiveInt(
+      Number(optionalEnv('JWT_EXPIRES_IN', '15')),
+      'JWT_EXPIRES_IN'
+    ),
+    refreshExpiresInDays: parsePositiveInt(
+      Number(optionalEnv('JWT_REFRESH_EXPIRES_IN', '7')),
+      'JWT_REFRESH_EXPIRES_IN'
+    ),
+    resetPasswordExpiresInHours: Number(optionalEnv('JWT_RESET_PASSWORD_EXPIRES_IN', '1')),
   },
   auth: {
     serviceUrl: optionalEnv('AUTH_SERVICE_URL', 'http://localhost:3001'),

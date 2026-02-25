@@ -49,7 +49,10 @@ export const generateNewTokens = async ({
 export const verifyRefreshToken = async (refreshToken: string): Promise<[User, RefreshToken]> => {
   try {
     verifyToken(refreshToken);
-  } catch {
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new UnauthorizedError(error.message);
+    }
     throw new UnauthorizedError('Invalid refresh token');
   }
 

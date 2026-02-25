@@ -4,6 +4,7 @@ import { hashToken } from '../utils/jwt';
 import dayjs from 'dayjs';
 import crypto from 'node:crypto';
 import { UnauthorizedError } from '../utils/errors';
+import { environment } from '../config/environment';
 
 export const deleteResetPasswordToken = async (token: string): Promise<void> => {
   const hashedToken = hashToken(token);
@@ -25,7 +26,7 @@ export const verifyResetPasswordToken = async (token: string): Promise<PasswordR
   });
 
   if (!foundResetPasswordToken || dayjs(foundResetPasswordToken.expiresAt).isBefore(dayjs())) {
-    throw new UnauthorizedError('Invalid email or reset token');
+    throw new UnauthorizedError('Invalid or expired reset token');
   }
 
   return foundResetPasswordToken;
@@ -44,7 +45,9 @@ export const createResetPasswordToken = async ({
     data: {
       token: hashedToken,
       userId,
-      expiresAt: dayjs().add(1, 'hour').toDate(),
+      expiresAt: environment.jwt.resetPasswordExpiresInHours
+        ? dayjs().add(environment.jwt.resetPasswordExpiresInHours, 'hour').toDate()
+        : dayjs().add(1, 'hour').toDate(),
     },
   });
 

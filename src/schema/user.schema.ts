@@ -5,16 +5,21 @@ export const createUserRequestBodySchema = z.object({
   firstName: z.string().min(1, 'First name is required').max(50, 'First name too long'),
   lastName: z.string().min(1, 'Last name is required').max(50, 'Last name too long'),
   email: emailSchema,
-  phone: z.string().optional(),
+  phone: z
+    .string()
+    .min(10, 'Phone number is required')
+    .max(10, 'Phone number cannot be more than 10 digits'),
   password: passwordSchema,
-  role: z.enum(['user', 'platform_admin', 'restaurant_user']).default('user'),
 });
 
 export const updateUserRequestBodySchema = z.object({
   firstName: z.string().min(1, 'First name is required').max(50, 'First name too long').optional(),
   lastName: z.string().min(1, 'Last name is required').max(50, 'Last name too long').optional(),
   email: emailSchema.optional(),
-  phone: z.string().optional(),
+  phone: z
+    .string()
+    .min(10, 'Phone number is required')
+    .max(10, 'Phone number cannot be more than 10 digits'),
   password: passwordSchema.optional(),
 });
 
