@@ -46,7 +46,7 @@ export const generateNewTokens = async ({
   };
 };
 
-export const verifyRefreshToken = async (refreshToken: string): Promise<[User, RefreshToken]> => {
+const validateTokenSignature = (refreshToken: string): void => {
   try {
     verifyToken(refreshToken);
   } catch (error) {
@@ -55,20 +55,38 @@ export const verifyRefreshToken = async (refreshToken: string): Promise<[User, R
     }
     throw new UnauthorizedError('Invalid refresh token');
   }
+};
 
-  const hashedRefreshToken = hashToken(refreshToken);
-
+const validateStoredRefreshToken = async (hashedRefreshToken: string): Promise<RefreshToken> => {
   const foundRefreshToken = await refreshTokenDatabaseService.findOne(hashedRefreshToken);
 
-  if (!foundRefreshToken || dayjs(foundRefreshToken.expiresAt).isBefore(dayjs())) {
+  if (!foundRefreshToken) {
     throw new UnauthorizedError('Invalid refresh token');
   }
 
-  const foundUser = await usersDatabaseService.findUserById(foundRefreshToken.userId);
+  if (dayjs(foundRefreshToken.expiresAt).isBefore(dayjs())) {
+    throw new UnauthorizedError('Invalid refresh token');
+  }
+
+  return foundRefreshToken;
+};
+
+const validateUserExists = async (userId: string): Promise<User> => {
+  const foundUser = await usersDatabaseService.findUserById(userId);
 
   if (!foundUser) {
     throw new NotFoundError('User not found');
   }
 
-  return [foundUser, foundRefreshToken];
+  return foundUser;
+};
+
+export const verifyRefreshToken = async (refreshToken: string): Promise<[User, RefreshToken]> => {
+  validateTokenSignature(refreshToken);
+
+  const hashedRefreshToken = hashToken(refreshToken);
+  const storedRefreshToken = await validateStoredRefreshToken(hashedRefreshToken);
+  const user = await validateUserExists(storedRefreshToken.userId);
+
+  return [user, storedRefreshToken];
 };
