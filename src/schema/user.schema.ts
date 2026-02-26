@@ -8,7 +8,8 @@ export const createUserRequestBodySchema = z.object({
   phone: z
     .string()
     .min(10, 'Phone number is required')
-    .max(10, 'Phone number cannot be more than 10 digits'),
+    .max(10, 'Phone number cannot be more than 10 digits')
+    .optional(),
   password: passwordSchema,
 });
 

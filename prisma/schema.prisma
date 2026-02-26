@@ -33,7 +33,7 @@ model RestaurantUser {
   updatedAt    DateTime @updatedAt
   deletedAt    DateTime?
 
-  @@unique([userId, restaurantId])
+  @@unique([userId, restaurantId], map: "RestaurantUser_userId_restaurantId_key")
 }
 
 model RefreshToken {

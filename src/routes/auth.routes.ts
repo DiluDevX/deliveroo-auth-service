@@ -11,6 +11,7 @@ import {
   signUpRequestBodySchema,
   resetPasswordRequestBodySchema,
 } from '../schema/auth.schema';
+import { rateLimiterMiddleware } from '../middleware/rate-limiter.middleware';
 
 const router = Router();
 
@@ -22,7 +23,12 @@ router.post('/login', validateBody(loginRequestBodySchema), authController.login
 
 router.post('/logout', validateBody(logoutRequestBodySchema), authController.logout);
 
-router.post('/refresh', validateBody(refreshTokenRequestBodySchema), authController.refreshToken);
+router.post(
+  '/refresh',
+  rateLimiterMiddleware,
+  validateBody(refreshTokenRequestBodySchema),
+  authController.refreshToken
+);
 
 router.post(
   '/forgot-password',
@@ -32,12 +38,14 @@ router.post(
 
 router.post(
   '/reset-password/verify',
+  rateLimiterMiddleware,
   validateBody(verifyResetPasswordTokenRequestBodySchema),
   authController.verifyResetPasswordToken
 );
 
 router.post(
   '/reset-password/update',
+  rateLimiterMiddleware,
   validateBody(resetPasswordRequestBodySchema),
   authController.resetPassword
 );

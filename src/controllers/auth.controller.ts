@@ -71,7 +71,7 @@ export const signup = async (
     });
 
     if (existingUser && !existingUser.deletedAt) {
-      throw new NotFoundError('User with this email already exists');
+      throw HttpStatusCodes.CONTINUE;
     }
     logger.info({ role: 'user' }, 'Creating new user account');
 
@@ -250,13 +250,7 @@ export const forgotPassword = async (
         userId: foundUser.id,
       });
 
-    logger.info(
-      {
-        resetTokenId: createdResetPasswordToken.record.id,
-        userId: createdResetPasswordToken.record.userId,
-      },
-      'Password reset token created'
-    );
+    logger.info('Password reset token created');
 
     await emailService.sendResetPasswordEmail(req.body.email, createdResetPasswordToken.token);
 
@@ -309,16 +303,13 @@ export const resetPassword = async (
     const foundResetPasswordToken =
       await resetPasswordTokenDatabaseService.verifyResetPasswordToken(req.body.token);
 
-    logger.info(
-      { resetTokenId: foundResetPasswordToken.id, userId: foundResetPasswordToken.userId },
-      'Reset password token verified'
-    );
+    logger.info('Reset password token verified');
 
     await usersDatabaseService.updateUserPartially(foundResetPasswordToken.userId, {
       password: req.body.password,
     });
 
-    logger.info({ userId: foundResetPasswordToken.userId }, 'User password updated');
+    logger.info('User password updated');
 
     await resetPasswordTokenDatabaseService.deleteResetPasswordToken(req.body.token);
 

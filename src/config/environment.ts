@@ -49,7 +49,8 @@ function optionalEnv(name: string, defaultValue: string): string {
   return process.env[name] || defaultValue;
 }
 
-const parsePositiveInt = (value: number, name: string): number => {
+const parsePositiveInt = (raw: string, name: string): number => {
+  const value = Number(raw);
   if (Number.isNaN(value) || value <= 0) {
     throw new Error(`Invalid ${name} value: ${value}. Must be a positive integer.`);
   }
@@ -63,17 +64,14 @@ if (!validEnvs.includes(rawEnv as EnvironmentEnum)) {
 }
 
 export const environment: Environment = {
-  port: Number.parseInt(optionalEnv('PORT', '3000'), 10),
+  port: parsePositiveInt(optionalEnv('PORT', '3000'), 'PORT'),
   env: rawEnv as EnvironmentEnum,
   databaseUrl: requireEnv('DATABASE_URL'),
   jwt: {
     secret: requireEnv('JWT_SECRET'),
-    expiresInMinutes: parsePositiveInt(
-      Number(optionalEnv('JWT_EXPIRES_IN', '15')),
-      'JWT_EXPIRES_IN'
-    ),
+    expiresInMinutes: parsePositiveInt(optionalEnv('JWT_EXPIRES_IN', '15'), 'JWT_EXPIRES_IN'),
     refreshExpiresInDays: parsePositiveInt(
-      Number(optionalEnv('JWT_REFRESH_EXPIRES_IN', '7')),
+      optionalEnv('JWT_REFRESH_EXPIRES_IN', '7'),
       'JWT_REFRESH_EXPIRES_IN'
     ),
     resetPasswordExpiresInHours: Number(optionalEnv('JWT_RESET_PASSWORD_EXPIRES_IN', '1')),

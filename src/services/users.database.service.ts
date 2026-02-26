@@ -1,8 +1,7 @@
 import { Prisma, User } from '@prisma/client';
 import { prisma } from '../config/database';
-import { BadRequestError, NotFoundError } from '../utils/errors';
+import { NotFoundError } from '../utils/errors';
 import { hashPassword } from '../utils/password';
-import { softDeleteAllRestaurantUserRecords } from './restaurantUser.service';
 
 export const findManyWithoutPassword = async (
   where: Prisma.UserWhereInput
@@ -100,23 +99,16 @@ export const updateUserPartially = async (
 };
 
 export const softDeleteUser = async (userId: string) => {
-  if (!userId) {
-    throw new BadRequestError('User ID is required');
-  }
+  const { softDeleteUserWithCascade } = await import('./userLifecycle.service');
 
-  const user = await findOneWithoutPassword({
-    id: userId,
-  });
+  // Get user and cascade soft delete to related records
+  await softDeleteUserWithCascade(userId);
 
   // Perform soft delete by setting deletedAt timestamp
   await prisma.user.update({
     where: { id: userId },
     data: { deletedAt: new Date() },
   });
-
-  if (user && user.role === 'restaurant_user') {
-    await softDeleteAllRestaurantUserRecords(userId);
-  }
 
   return { success: true };
 };

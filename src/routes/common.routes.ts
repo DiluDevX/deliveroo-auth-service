@@ -1,19 +1,11 @@
 import { Request, Response, Router } from 'express';
-import rateLimit from 'express-rate-limit';
 import { version } from '../../package.json';
 import { prisma } from '../config/database';
 import { CommonResponseDTO, HealthCheckResponseBodyDTO } from '../dtos/common.dto';
 import HttpStatusCode from 'http-status-codes';
+import { rateLimiterMiddleware } from '../middleware/rate-limiter.middleware';
 
 const router = Router();
-
-const rateLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 10,
-  message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-});
 
 async function checkDatabaseConnection(): Promise<'connected' | 'disconnected'> {
   try {
@@ -26,7 +18,7 @@ async function checkDatabaseConnection(): Promise<'connected' | 'disconnected'> 
 
 router.get(
   '/',
-  rateLimiter,
+  rateLimiterMiddleware,
   async (_req: Request, res: Response<CommonResponseDTO<HealthCheckResponseBodyDTO>>) => {
     const db = await checkDatabaseConnection();
 

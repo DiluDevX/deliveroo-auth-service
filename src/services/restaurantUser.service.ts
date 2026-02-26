@@ -16,10 +16,7 @@ export const updateRestaurantUserRole = async (
     throw new BadRequestError('User not found');
   }
 
-  const updatedData: { role?: RestaurantRole } = {};
   if (user.role === 'restaurant_user') {
-    updatedData.role = role;
-  } else {
     throw new BadRequestError('restaurant_User Role is required');
   }
 
@@ -32,11 +29,13 @@ export const updateRestaurantUserRole = async (
 
   if (!updated) {
     throw new BadRequestError('Restaurant user record not found');
+  } else if (updated.role === 'employee' || updated.role === 'finance') {
+    throw new BadRequestError('Only restaurant admins/super_admins can update roles');
   }
 
   const result = await prisma.restaurantUser.update({
     where: { id: updated.id },
-    data: updatedData,
+    data: { role: role },
   });
 
   return result;
@@ -49,13 +48,15 @@ export const softDeleteAllRestaurantUserRecords = async (userId: string) => {
     },
   });
 
-  if (!updated) {
+  if (updated.length === 0) {
     throw new NotFoundError('Restaurant user record not found');
   }
-  updated.forEach(async (record) => {
-    await prisma.restaurantUser.update({
-      where: { id: record.id },
-      data: { deletedAt: new Date() },
-    });
+  await prisma.restaurantUser.updateMany({
+    where: {
+      userId: userId,
+    },
+    data: {
+      deletedAt: new Date(),
+    },
   });
 };
