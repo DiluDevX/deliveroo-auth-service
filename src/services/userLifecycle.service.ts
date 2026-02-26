@@ -1,4 +1,4 @@
-import { BadRequestError } from '../utils/errors';
+import { BadRequestError, NotFoundError } from '../utils/errors';
 import { findOneWithoutPassword } from './users.database.service';
 import { softDeleteAllRestaurantUserRecords } from './restaurantUser.service';
 
@@ -17,7 +17,7 @@ export const softDeleteUserWithCascade = async (userId: string) => {
   });
 
   if (!user) {
-    throw new BadRequestError('User not found');
+    throw new NotFoundError('User not found');
   }
 
   // Cascade soft delete to restaurant user records if needed

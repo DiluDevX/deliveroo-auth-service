@@ -1,3 +1,5 @@
+import { escapeHtml, escapeUrl } from '../utils/html';
+
 export interface ResetPasswordTemplateParams {
   companyName: string;
   logoUrl: string;
@@ -58,7 +60,7 @@ export const resetPasswordTemplate = ({
   </head>
   <body>
     <div class="logo">
-      <img src="${logoUrl}" alt="${companyName} Logo" />
+      <img src="${escapeUrl(logoUrl)}" alt="${escapeHtml(companyName)} Logo" />
     </div>
 
     <h1>Reset Your Password</h1>
@@ -72,19 +74,19 @@ export const resetPasswordTemplate = ({
 
     <p>To reset your password, please click the button below:</p>
 
-    <a href="${resetUrl}" class="button">Reset Password</a>
+    <a href="${escapeUrl(resetUrl)}" class="button">Reset Password</a>
 
     <p>This link will expire in 1 hour for security reasons.</p>
 
     <p>If the button above doesn't work, copy and paste the following link into your browser:</p>
 
-    <p>${resetUrl}</p>
+    <p>${escapeHtml(resetUrl)}</p>
 
     <div class="footer">
-      <p>&copy; ${new Date().getFullYear()} ${companyName}. All rights reserved.</p>
+      <p>&copy; ${new Date().getFullYear()} ${escapeHtml(companyName)}. All rights reserved.</p>
       <p>
         If you need any assistance, please contact us at
-        <a href="mailto:${supportEmail}">${supportEmail}</a>.
+        <a href="mailto:${escapeHtml(supportEmail)}">${escapeHtml(supportEmail)}</a>.
       </p>
     </div>
   </body>

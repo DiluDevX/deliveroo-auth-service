@@ -60,7 +60,7 @@ export const verifyRefreshToken = async (refreshToken: string): Promise<[User, R
 
   const foundRefreshToken = await refreshTokenDatabaseService.findOne(hashedRefreshToken);
 
-  if (!foundRefreshToken) {
+  if (!foundRefreshToken || dayjs(foundRefreshToken.expiresAt).isBefore(dayjs())) {
     throw new UnauthorizedError('Invalid refresh token');
   }
 

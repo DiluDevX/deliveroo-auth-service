@@ -19,7 +19,12 @@ router.post('/check-email', validateBody(checkEmailRequestBodySchema), authContr
 
 router.post('/signup', validateBody(signUpRequestBodySchema), authController.signup);
 
-router.post('/login', validateBody(loginRequestBodySchema), authController.login);
+router.post(
+  '/login',
+  rateLimiterMiddleware,
+  validateBody(loginRequestBodySchema),
+  authController.login
+);
 
 router.post('/logout', validateBody(logoutRequestBodySchema), authController.logout);
 

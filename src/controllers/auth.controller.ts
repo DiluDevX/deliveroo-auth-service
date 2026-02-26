@@ -20,7 +20,7 @@ import {
   VerifyResetPasswordTokenRequestBodyDTO,
 } from '../dtos/auth.dto';
 import { CommonResponseDTO } from '../dtos/common.dto';
-import { NotFoundError, UnauthorizedError } from '../utils/errors';
+import { ConflictError, NotFoundError, UnauthorizedError } from '../utils/errors';
 import { comparePasswords } from '../utils/password';
 import HttpStatusCodes from 'http-status-codes';
 
@@ -71,7 +71,7 @@ export const signup = async (
     });
 
     if (existingUser && !existingUser.deletedAt) {
-      throw HttpStatusCodes.CONTINUE;
+      throw new ConflictError('Email is already in use');
     }
     logger.info({ role: 'user' }, 'Creating new user account');
 

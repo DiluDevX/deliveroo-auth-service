@@ -74,7 +74,10 @@ export const environment: Environment = {
       optionalEnv('JWT_REFRESH_EXPIRES_IN', '7'),
       'JWT_REFRESH_EXPIRES_IN'
     ),
-    resetPasswordExpiresInHours: Number(optionalEnv('JWT_RESET_PASSWORD_EXPIRES_IN', '1')),
+    resetPasswordExpiresInHours: parsePositiveInt(
+      optionalEnv('JWT_RESET_PASSWORD_EXPIRES_IN', '1'),
+      'JWT_RESET_PASSWORD_EXPIRES_IN'
+    ),
   },
   auth: {
     serviceUrl: optionalEnv('AUTH_SERVICE_URL', 'http://localhost:3001'),

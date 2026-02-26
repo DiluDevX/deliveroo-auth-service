@@ -7,7 +7,7 @@ export const createUserRequestBodySchema = z.object({
   email: emailSchema,
   phone: z
     .string()
-    .min(10, 'Phone number is required')
+    .min(10, 'Phone number should be 10 digits')
     .max(10, 'Phone number cannot be more than 10 digits')
     .optional(),
   password: passwordSchema,

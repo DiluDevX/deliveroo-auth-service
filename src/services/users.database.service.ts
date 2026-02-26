@@ -87,6 +87,9 @@ export const updateUserPartially = async (
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data,
+      omit: {
+        password: true,
+      },
     });
 
     return updatedUser;

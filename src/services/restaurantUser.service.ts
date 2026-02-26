@@ -3,11 +3,7 @@ import { BadRequestError, NotFoundError } from '../utils/errors';
 import { RestaurantRole } from '@prisma/client';
 import { findOneWithoutPassword } from './users.database.service';
 
-export const updateRestaurantUserRole = async (
-  userId: string,
-  role: RestaurantRole,
-  restaurantId: string
-) => {
+const validateUserPermissions = async (userId: string) => {
   const user = await findOneWithoutPassword({
     id: userId,
   });
@@ -16,25 +12,43 @@ export const updateRestaurantUserRole = async (
     throw new BadRequestError('User not found');
   }
 
-  if (user.role === 'restaurant_user') {
-    throw new BadRequestError('restaurant_User Role is required');
+  if (user.role !== 'restaurant_user') {
+    throw new BadRequestError('restaurant_user Role is required');
   }
 
-  const updated = await prisma.restaurantUser.findFirst({
+  return user;
+};
+
+const validateRestaurantUserRecord = async (userId: string, restaurantId: string) => {
+  const restaurantUser = await prisma.restaurantUser.findFirst({
     where: {
       userId: userId,
       restaurantId: restaurantId,
     },
   });
 
-  if (!updated) {
+  if (!restaurantUser) {
     throw new BadRequestError('Restaurant user record not found');
-  } else if (updated.role === 'employee' || updated.role === 'finance') {
+  }
+
+  const isRestrictedRole = restaurantUser.role === 'employee' || restaurantUser.role === 'finance';
+  if (isRestrictedRole) {
     throw new BadRequestError('Only restaurant admins/super_admins can update roles');
   }
 
+  return restaurantUser;
+};
+
+export const updateRestaurantUserRole = async (
+  userId: string,
+  role: RestaurantRole,
+  restaurantId: string
+) => {
+  await validateUserPermissions(userId);
+  const restaurantUser = await validateRestaurantUserRecord(userId, restaurantId);
+
   const result = await prisma.restaurantUser.update({
-    where: { id: updated.id },
+    where: { id: restaurantUser.id },
     data: { role: role },
   });
 

@@ -18,9 +18,9 @@ app.use(express.urlencoded({ extended: true }));
 // Request logging
 app.use(requestLogger as RequestHandler);
 
-app.use(commonRoutes);
 app.use('/api/auth', apiKeyMiddleware, authRoutes);
 app.use('/api/users', apiKeyMiddleware, usersRoutes);
+app.use(commonRoutes);
 
 // Error handling (must be last)
 app.use(errorHandler as ErrorRequestHandler);
