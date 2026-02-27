@@ -92,9 +92,14 @@ jobs:
             docker rm -f deliveroo-auth-service >/dev/null 2>&1 || true
 
              # Map DEPLOY_ENV to Doppler config names (dev/prd)
-             DOPPLER_CONFIG="dev"
-             if [ "$DEPLOY_ENV" = "production" ]; then
+             if [ "$DEPLOY_ENV" = "development" ]; then
+               DOPPLER_CONFIG="dev"
+             elif [ "$DEPLOY_ENV" = "production" ]; then
                DOPPLER_CONFIG="prd"
+             else
+               echo "Error: Invalid DEPLOY_ENV value: $DEPLOY_ENV"
+               echo "Expected: 'development' or 'production'"
+               exit 1
              fi
 
              docker run -d \

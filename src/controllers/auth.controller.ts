@@ -36,9 +36,11 @@ export const checkEmail = async (
       email: req.body.email,
     });
 
-    if (!foundUser || foundUser.deletedAt) {
+    if (!foundUser) {
       throw new NotFoundError('User not found');
     }
+
+    logger.info({ userId: foundUser.id }, 'User found');
 
     res.status(StatusCodes.OK).json({
       success: true,
@@ -49,7 +51,6 @@ export const checkEmail = async (
         email: foundUser.email,
       },
     });
-    logger.info({ userId: foundUser.id }, 'User found');
   } catch (error) {
     logger.error(
       { error: error instanceof Error ? error.message : 'Unknown error' },
