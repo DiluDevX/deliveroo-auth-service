@@ -4,6 +4,7 @@ import { prisma } from '../config/database';
 import { CommonResponseDTO, HealthCheckResponseBodyDTO } from '../dtos/common.dto';
 import HttpStatusCode from 'http-status-codes';
 import { rateLimiterMiddleware } from '../middleware/rate-limiter.middleware';
+import { environment } from '../config/environment';
 
 const router = Router();
 
@@ -27,7 +28,7 @@ router.get(
       message: 'Health check successful',
       data: {
         db,
-        service: 'auth-microservice',
+        service: environment.serviceName,
         timestamp: new Date(),
         version,
       },
