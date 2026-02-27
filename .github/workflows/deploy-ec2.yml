@@ -93,8 +93,11 @@ jobs:
             docker run -d \
               --name deliveroo-auth-service \
               --restart unless-stopped \
-              -p 80:80 \
+              -p 80:3000 \
               -e NODE_ENV="$DEPLOY_ENV" \
               -e APP_VERSION="$APP_VERSION" \
               -e DOPPLER_TOKEN="$DOPPLER_TOKEN" \
+              -e DOPPLER_CONFIG="$DEPLOY_ENV" \
+              -e SERVICE_NAME="auth-service" \
+              -e PORT="3000" \
               "$IMAGE_URI"

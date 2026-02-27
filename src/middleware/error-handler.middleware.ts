@@ -3,7 +3,7 @@ import { AppError, ValidationError } from '../utils/errors';
 import { logger } from '../utils/logger';
 import { environment, EnvironmentEnum } from '../config/environment';
 import { Prisma } from '@prisma/client';
-import HttpStatusCodes from 'http-status-codes';
+import StatusCodes from 'http-status-codes';
 interface ErrorResponse {
   success: false;
   message: string;
@@ -40,7 +40,7 @@ function handlePrismaError(err: Error, res: Response): boolean {
   if (prismaError.code === 'P2002') {
     const target = prismaError.meta?.target;
     const field = Array.isArray(target) ? target[0] : target;
-    res.status(HttpStatusCodes.CONFLICT).json({
+    res.status(StatusCodes.CONFLICT).json({
       success: false,
       message: 'A record with this value already exists',
       field: field,
@@ -49,7 +49,7 @@ function handlePrismaError(err: Error, res: Response): boolean {
   }
 
   if (prismaError.code === 'P2025') {
-    res.status(HttpStatusCodes.NOT_FOUND).json({
+    res.status(StatusCodes.NOT_FOUND).json({
       success: false,
       message: 'Record not found',
     });
@@ -61,7 +61,7 @@ function handlePrismaError(err: Error, res: Response): boolean {
 
 function handleJwtError(err: Error, res: Response): boolean {
   if (err.name === 'JsonWebTokenError') {
-    res.status(HttpStatusCodes.UNAUTHORIZED).json({
+    res.status(StatusCodes.UNAUTHORIZED).json({
       success: false,
       message: 'Invalid token',
     });
@@ -69,7 +69,7 @@ function handleJwtError(err: Error, res: Response): boolean {
   }
 
   if (err.name === 'TokenExpiredError') {
-    res.status(HttpStatusCodes.UNAUTHORIZED).json({
+    res.status(StatusCodes.UNAUTHORIZED).json({
       success: false,
       message: 'Token expired',
     });
@@ -104,5 +104,5 @@ export function errorHandler(err: Error, _req: Request, res: Response, _next: Ne
     response.stack = err.stack;
   }
 
-  res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json(response);
+  res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(response);
 }

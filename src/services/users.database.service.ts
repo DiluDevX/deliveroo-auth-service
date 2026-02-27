@@ -27,8 +27,11 @@ export const findManyWithPassword = async (where: Prisma.UserWhereInput): Promis
 export const findOneWithoutPassword = async (
   where: Prisma.UserWhereUniqueInput | { email: string }
 ): Promise<Omit<User, 'password'> | null> => {
-  return prisma.user.findUnique({
-    where: where as Prisma.UserWhereUniqueInput,
+  return prisma.user.findFirst({
+    where: {
+      ...where,
+      deletedAt: null,
+    } as Prisma.UserWhereInput,
     omit: {
       password: true,
     },

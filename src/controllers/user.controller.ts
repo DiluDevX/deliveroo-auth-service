@@ -11,7 +11,7 @@ import type {
 import { CommonResponseDTO, IdRequestPathParamsDTO } from '../dtos/common.dto';
 import * as usersDatabaseService from '../services/users.database.service';
 import { ConflictError, NotFoundError } from '../utils/errors';
-import HttpStatusCodes from 'http-status-codes';
+import { StatusCodes } from 'http-status-codes';
 import { logger } from '../utils/logger';
 
 export const getAllUsers = async (
@@ -22,7 +22,7 @@ export const getAllUsers = async (
   try {
     const users = await usersDatabaseService.findManyWithoutPassword({ deletedAt: null });
     logger.info({ count: users.length }, 'Users retrieved successfully');
-    res.status(HttpStatusCodes.OK).json({
+    res.status(StatusCodes.OK).json({
       success: true,
       message: 'Users retrieved successfully',
       data: users,
@@ -46,7 +46,6 @@ export const getSingleUser = async (
 
     const foundUser = await usersDatabaseService.findOneWithoutPassword({
       id: userId,
-      deletedAt: null,
     });
 
     logger.info({ userId }, 'User found');
@@ -55,7 +54,7 @@ export const getSingleUser = async (
       throw new NotFoundError('User not found');
     }
 
-    res.status(HttpStatusCodes.OK).json({
+    res.status(StatusCodes.OK).json({
       success: true,
       message: 'User retrieved successfully',
       data: foundUser,
@@ -94,7 +93,7 @@ export const createUser = async (
 
     logger.info({ userId: createdUser.id }, 'User created successfully');
 
-    res.status(HttpStatusCodes.CREATED).json({
+    res.status(StatusCodes.CREATED).json({
       success: true,
       message: 'User created successfully',
       data: createdUser,
@@ -122,7 +121,7 @@ export const updateUser = async (
 
     logger.info({ userId }, 'User updated successfully');
 
-    res.status(HttpStatusCodes.OK).json({
+    res.status(StatusCodes.OK).json({
       success: true,
       message: 'User updated successfully',
       data: user,
@@ -144,7 +143,7 @@ export const deleteUser = async (
   try {
     const userId = req.params.id;
     await usersDatabaseService.softDeleteUser(userId);
-    res.status(HttpStatusCodes.OK).json({
+    res.status(StatusCodes.OK).json({
       success: true,
       message: 'User deleted successfully',
     });
