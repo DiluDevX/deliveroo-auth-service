@@ -91,14 +91,20 @@ jobs:
 
             docker rm -f deliveroo-auth-service >/dev/null 2>&1 || true
 
-            docker run -d \
-              --name deliveroo-auth-service \
-              --restart unless-stopped \
-              -p 80:3000 \
-              -e NODE_ENV="$DEPLOY_ENV" \
-              -e APP_VERSION="$APP_VERSION" \
-              -e DOPPLER_TOKEN="$DOPPLER_TOKEN" \
-              -e DOPPLER_CONFIG="$DEPLOY_ENV" \
-              -e SERVICE_NAME="auth-service" \
-              -e PORT="3000" \
-              "$IMAGE_URI"
+             # Map DEPLOY_ENV to Doppler config names (dev/prd)
+             DOPPLER_CONFIG="dev"
+             if [ "$DEPLOY_ENV" = "production" ]; then
+               DOPPLER_CONFIG="prd"
+             fi
+
+             docker run -d \
+               --name deliveroo-auth-service \
+               --restart unless-stopped \
+               -p 80:3000 \
+               -e NODE_ENV="$DEPLOY_ENV" \
+               -e APP_VERSION="$APP_VERSION" \
+               -e DOPPLER_TOKEN="$DOPPLER_TOKEN" \
+               -e DOPPLER_CONFIG="$DOPPLER_CONFIG" \
+               -e SERVICE_NAME="auth-service" \
+               -e PORT="3000" \
+               "$IMAGE_URI"

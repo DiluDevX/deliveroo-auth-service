@@ -18,6 +18,8 @@ export const softDeleteUserWithCascade = async (userId: string) => {
 
   if (!user) {
     throw new NotFoundError('User not found');
+  } else if (user.deletedAt) {
+    throw new BadRequestError('User is already deleted');
   }
 
   // Cascade soft delete to restaurant user records if needed
