@@ -36,8 +36,6 @@ export const checkEmail = async (
       email: req.body.email,
     });
 
-    logger.info({ userId: foundUser?.id }, 'User found');
-
     if (!foundUser || foundUser.deletedAt) {
       throw new NotFoundError('User not found');
     }
@@ -51,6 +49,7 @@ export const checkEmail = async (
         email: foundUser.email,
       },
     });
+    logger.info({ userId: foundUser.id }, 'User found');
   } catch (error) {
     logger.error(
       { error: error instanceof Error ? error.message : 'Unknown error' },

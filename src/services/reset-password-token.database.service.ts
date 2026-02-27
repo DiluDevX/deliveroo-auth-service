@@ -45,9 +45,7 @@ export const createResetPasswordToken = async ({
     data: {
       token: hashedToken,
       userId,
-      expiresAt: environment.jwt.resetPasswordExpiresInHours
-        ? dayjs().add(environment.jwt.resetPasswordExpiresInHours, 'hour').toDate()
-        : dayjs().add(1, 'hour').toDate(),
+      expiresAt: dayjs().add(environment.jwt.resetPasswordExpiresInHours, 'hour').toDate(),
     },
   });
 
