@@ -1,15 +1,16 @@
 import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
+import { environment, EnvironmentEnum } from './environment';
 
 declare global {
   var prisma: PrismaClient | undefined;
 }
 
 // Prevent multiple instances during hot reload in development
-export const prisma = global.prisma || new PrismaClient();
+export const prisma = globalThis.prisma || new PrismaClient();
 
-if (process.env.NODE_ENV !== 'production') {
-  global.prisma = prisma;
+if (environment.env !== EnvironmentEnum.Production) {
+  globalThis.prisma = prisma;
 }
 
 export async function connectDatabase(): Promise<void> {

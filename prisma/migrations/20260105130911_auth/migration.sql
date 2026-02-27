@@ -9,7 +9,7 @@
 */
 -- AlterEnum
 BEGIN;
-CREATE TYPE "Role_new" AS ENUM ('user', 'admin');
+CREATE TYPE "Role_new" AS ENUM ('user', 'platform_admin', 'restaurant_admin');
 ALTER TABLE "public"."User" ALTER COLUMN "role" DROP DEFAULT;
 ALTER TABLE "User" ALTER COLUMN "role" TYPE "Role_new" USING (lower("role"::text)::"Role_new");
 ALTER TYPE "Role" RENAME TO "Role_old";

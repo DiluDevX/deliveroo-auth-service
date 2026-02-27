@@ -1,37 +1,27 @@
 import express, { ErrorRequestHandler, RequestHandler } from 'express';
-import cors from 'cors';
-import { config } from './config';
+import { environment } from './config/environment';
 import { connectDatabase, disconnectDatabase } from './config/database';
 import { logger } from './utils/logger';
 import { errorHandler } from './middleware/error-handler.middleware';
 import { requestLogger } from './middleware/request-logger.middleware';
-import { healthRoutes } from './routes/health.routes';
-import { setupSwagger } from './swagger';
+import { commonRoutes } from './routes/common.routes';
 import { apiKeyMiddleware } from './middleware/api-key.middleware';
 
 import authRoutes from './routes/auth.routes';
-import cookieParser from 'cookie-parser';
+import usersRoutes from './routes/user.routes';
 
 const app = express();
 
-// Core middleware
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-    credentials: true,
-  })
-);
-app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Request logging
 app.use(requestLogger as RequestHandler);
 
-app.use(healthRoutes);
 app.use('/api/auth', apiKeyMiddleware, authRoutes);
-// API Documentation
-setupSwagger(app);
+app.use('/api/users', apiKeyMiddleware, usersRoutes);
+
+app.use(commonRoutes);
 
 // Error handling (must be last)
 app.use(errorHandler as ErrorRequestHandler);
@@ -53,9 +43,8 @@ const startServer = async () => {
   try {
     await connectDatabase();
 
-    app.listen(config.port, () => {
-      logger.info(`Server running on port ${config.port}`);
-      logger.info(`API Docs available at http://localhost:${config.port}/api-docs`);
+    app.listen(environment.port, () => {
+      logger.info(`Server running on port ${environment.port}`);
     });
   } catch (error) {
     console.error('Failed to start server', error);

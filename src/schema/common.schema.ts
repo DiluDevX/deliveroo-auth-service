@@ -1,31 +1,31 @@
 import { z } from 'zod';
 
-// Common validation schemas reusable across the application
-
-export const idParamSchema = z.object({
-  id: z.string().uuid('Invalid ID format'),
+export const idRequestPathParamsSchema = z.object({
+  id: z.string().uuid('Invalid UUID format'),
 });
 
-export const paginationSchema = z.object({
+export const commonRequestQueryParamsSchema = z.object({
   page: z
     .string()
     .optional()
-    .transform((val) => (val ? parseInt(val, 10) : 1))
+    .transform((val) => (val ? Number.parseInt(val, 10) : 1))
     .pipe(z.number().int().positive()),
   limit: z
     .string()
     .optional()
-    .transform((val) => (val ? parseInt(val, 10) : 10))
+    .transform((val) => (val ? Number.parseInt(val, 10) : 10))
     .pipe(z.number().int().positive().max(100)),
   sortBy: z.string().optional(),
   sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
 });
 
-export const searchSchema = paginationSchema.extend({
-  q: z.string().optional(),
-});
+export const emailSchema = z
+  .string()
+  .min(5, 'Email is too short')
+  .max(100, 'Email too long')
+  .email('Invalid email format');
 
-// Type exports for use in controllers/services
-export type IdParam = z.infer<typeof idParamSchema>;
-export type PaginationQuery = z.infer<typeof paginationSchema>;
-export type SearchQuery = z.infer<typeof searchSchema>;
+export const passwordSchema = z
+  .string()
+  .min(8, 'Password must be at least 8 characters')
+  .max(100, 'Password too long');

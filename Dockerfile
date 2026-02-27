@@ -1,36 +1,65 @@
-ARG NODE_VERSION=24.11.1
+# syntax=docker/dockerfile:1.7
+FROM node:24.11.1-alpine AS builder
 
-FROM node:${NODE_VERSION}-alpine as base
-WORKDIR /app
+ARG ENV=development
+ENV NODE_ENV=$ENV
+ARG APP_VERSION=0.0.0-dev
+ENV APP_VERSION=$APP_VERSION
 
-FROM base as deps
-COPY package.json ./
-RUN npm install
-################################################################################
-# Build the application
-FROM deps as build
-COPY tsconfig.json ./
-COPY prisma ./prisma
-COPY src ./src
-RUN npx prisma generate
-RUN npm run build
+WORKDIR /usr/app
 
-################################################################################
-# Production image
-FROM base AS final
-ENV NODE_ENV=production
-
-# Install Doppler CLI as root
 RUN apk add --no-cache curl gnupg \
     && curl -Ls https://cli.doppler.com/install.sh | sh
 
+COPY package.json package-lock.json ./
+RUN npm ci
 
 COPY prisma ./prisma
-COPY package.json ./
-COPY --from=deps /app/node_modules ./node_modules
-RUN npm run prisma:generate
-COPY --from=build /app/dist ./dist
+
+# Use BuildKit secrets for sensitive data during build
+# Secrets are not stored in image layers and are only mounted at build time
+# Usage: docker build --secret doppler_token=<token> --secret database_url=<url> ...
+RUN --mount=type=secret,id=doppler_token \
+    --mount=type=secret,id=database_url \
+    sh -c 'export DOPPLER_TOKEN=$(cat /run/secrets/doppler_token) && \
+           export DATABASE_URL=$(cat /run/secrets/database_url) && \
+           doppler run -- npx prisma generate'
+
+COPY . .
+
+RUN --mount=type=secret,id=doppler_token \
+    sh -c 'export DOPPLER_TOKEN=$(cat /run/secrets/doppler_token) && \
+           doppler run -- npm run build'
+
+FROM node:24.11.1-alpine
+
+ARG ENV=development
+ENV NODE_ENV=$ENV
+ARG APP_VERSION=0.0.0-dev
+ENV APP_VERSION=$APP_VERSION
+
+WORKDIR /usr/app
+
+LABEL org.opencontainers.image.version=$APP_VERSION
+
+RUN apk add --no-cache gnupg
+
+COPY --from=builder /usr/app/package.json ./package.json
+COPY --from=builder /usr/app/package-lock.json ./package-lock.json
+COPY --from=builder /usr/app/node_modules ./node_modules
+COPY --from=builder /usr/app/dist ./dist
+COPY --from=builder /usr/app/prisma ./prisma
+COPY --from=builder /usr/local/bin/doppler /usr/local/bin/doppler
+COPY docker-entrypoint.sh ./docker-entrypoint.sh
+
+RUN chmod +x ./docker-entrypoint.sh \
+    && chown -R node:node /usr/app
+
 USER node
 
-EXPOSE 4001
-CMD ["doppler", "run", "--project", "deliveroo-auth-service", "--config", "dev", "--", "node", "dist/server.js"]
+# Application listens on PORT environment variable (defaults to 3000)
+# Docker port mapping should match: -p <host-port>:3000
+# Or set PORT=80 via environment variable to listen on 80
+EXPOSE 3000
+
+CMD ["./docker-entrypoint.sh"]
