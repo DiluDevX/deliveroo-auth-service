@@ -57,6 +57,9 @@ RUN chmod +x ./docker-entrypoint.sh \
 
 USER node
 
-EXPOSE 80
+# Application listens on PORT environment variable (defaults to 3000)
+# Docker port mapping should match: -p <host-port>:3000
+# Or set PORT=80 via environment variable to listen on 80
+EXPOSE 3000
 
 CMD ["./docker-entrypoint.sh"]
