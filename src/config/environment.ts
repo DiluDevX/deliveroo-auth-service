@@ -10,6 +10,11 @@ interface MailConfig {
   resendApiKey: string;
 }
 
+interface RateLimitConfig {
+  windowMs: number;
+  max: number;
+}
+
 export enum EnvironmentEnum {
   Development = 'development',
   Production = 'production',
@@ -35,6 +40,7 @@ interface Environment {
   authApiKey: string;
   serviceName: string;
   mail: MailConfig;
+  rateLimit: RateLimitConfig;
 }
 
 function requireEnv(name: string): string {
@@ -57,15 +63,71 @@ const parsePositiveInt = (raw: string, name: string): number => {
   return value;
 };
 
+function loadMailConfig(env: EnvironmentEnum): MailConfig {
+  const isProduction = env === EnvironmentEnum.Production;
+
+  if (isProduction) {
+    return {
+      companyName: requireEnv('COMPANY_NAME'),
+      companyEmail: requireEnv('COMPANY_EMAIL'),
+      logoUrl: requireEnv('LOGO_URL'),
+      supportEmail: requireEnv('SUPPORT_EMAIL'),
+      appUrl: requireEnv('APP_URL'),
+      resendApiKey: requireEnv('RESEND_API_KEY'),
+    };
+  }
+
+  return {
+    companyName: optionalEnv('COMPANY_NAME', 'Local Development'),
+    companyEmail: optionalEnv('COMPANY_EMAIL', 'noreply@localhost'),
+    logoUrl: optionalEnv('LOGO_URL', 'https://via.placeholder.com/200?text=Logo'),
+    supportEmail: optionalEnv('SUPPORT_EMAIL', 'support@localhost'),
+    appUrl: optionalEnv('APP_URL', 'http://localhost:3000'),
+    resendApiKey: optionalEnv('RESEND_API_KEY', 'test-key-development-only'),
+  };
+}
+
+function loadRateLimitConfig(env: EnvironmentEnum): RateLimitConfig {
+  const defaults = {
+    [EnvironmentEnum.Production]: {
+      windowMs: 15 * 60 * 1000,
+      max: 100,
+    },
+    [EnvironmentEnum.Development]: {
+      windowMs: 15 * 60 * 1000,
+      max: 1000,
+    },
+    [EnvironmentEnum.Test]: {
+      windowMs: 1 * 60 * 1000,
+      max: 10000,
+    },
+  };
+
+  const envDefaults = defaults[env];
+
+  return {
+    windowMs: parsePositiveInt(
+      optionalEnv('RATE_LIMIT_WINDOW_MS', envDefaults.windowMs.toString()),
+      'RATE_LIMIT_WINDOW_MS'
+    ),
+    max: parsePositiveInt(
+      optionalEnv('RATE_LIMIT_MAX', envDefaults.max.toString()),
+      'RATE_LIMIT_MAX'
+    ),
+  };
+}
+
 const rawEnv = optionalEnv('NODE_ENV', 'development');
 const validEnvs = Object.values(EnvironmentEnum);
 if (!validEnvs.includes(rawEnv as EnvironmentEnum)) {
   throw new Error(`Invalid NODE_ENV value: ${rawEnv}. Must be one of ${validEnvs.join(', ')}`);
 }
 
+const environment_raw = rawEnv as EnvironmentEnum;
+
 export const environment: Environment = {
   port: parsePositiveInt(optionalEnv('PORT', '3000'), 'PORT'),
-  env: rawEnv as EnvironmentEnum,
+  env: environment_raw,
   databaseUrl: requireEnv('DATABASE_URL'),
   jwt: {
     secret: requireEnv('JWT_SECRET'),
@@ -86,13 +148,7 @@ export const environment: Environment = {
     level: optionalEnv('LOG_LEVEL', 'info'),
   },
   authApiKey: requireEnv('AUTH_API_KEY'),
-  mail: {
-    companyName: requireEnv('COMPANY_NAME'),
-    companyEmail: requireEnv('COMPANY_EMAIL'),
-    logoUrl: requireEnv('LOGO_URL'),
-    supportEmail: requireEnv('SUPPORT_EMAIL'),
-    appUrl: requireEnv('APP_URL'),
-    resendApiKey: requireEnv('RESEND_API_KEY'),
-  },
+  mail: loadMailConfig(environment_raw),
+  rateLimit: loadRateLimitConfig(environment_raw),
   serviceName: requireEnv('SERVICE_NAME'),
 };

@@ -1,8 +1,8 @@
 -- AlterTable
 ALTER TABLE "RestaurantUser" ADD COLUMN     "deletedAt" TIMESTAMP(3);
 
--- Drop the unconditional unique constraint that blocks soft-deleted row recreation
-ALTER TABLE "RestaurantUser" DROP CONSTRAINT IF EXISTS "RestaurantUser_userId_restaurantId_key";
+-- Drop the unconditional unique index that blocks soft-deleted row recreation
+DROP INDEX IF EXISTS "RestaurantUser_userId_restaurantId_key";
 
 -- Create a partial unique index that only enforces uniqueness for active (non-deleted) rows
 CREATE UNIQUE INDEX "RestaurantUser_userId_restaurantId_key" 

@@ -31,7 +31,7 @@ const sendMail = async ({
 
   if (error) {
     logger.error(error);
-    return;
+    throw new Error('Failed to send email');
   }
   logger.info(`Email sent to ${to} with subject "${subject}"`);
 };

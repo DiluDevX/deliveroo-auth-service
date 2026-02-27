@@ -1,3 +1,4 @@
+import { environment } from '../config/environment';
 import { escapeHtml, escapeUrl } from '../utils/html';
 
 export interface ResetPasswordTemplateParams {
@@ -76,7 +77,7 @@ export const resetPasswordTemplate = ({
 
     <a href="${escapeUrl(resetUrl)}" class="button">Reset Password</a>
 
-    <p>This link will expire in 1 hour for security reasons.</p>
+    <p>This link will expire in ${environment.jwt.resetPasswordExpiresInHours} hour(s) for security reasons.</p>
 
     <p>If the button above doesn't work, copy and paste the following link into your browser:</p>
 
@@ -86,7 +87,7 @@ export const resetPasswordTemplate = ({
       <p>&copy; ${new Date().getFullYear()} ${escapeHtml(companyName)}. All rights reserved.</p>
       <p>
         If you need any assistance, please contact us at
-        <a href="mailto:${escapeHtml(supportEmail)}">${escapeHtml(supportEmail)}</a>.
+        <a href="mailto:${supportEmail}">${escapeHtml(supportEmail)}</a>.
       </p>
     </div>
   </body>

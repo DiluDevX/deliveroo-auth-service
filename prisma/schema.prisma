@@ -11,7 +11,7 @@ model User {
   id        String   @id @default(uuid())
   firstName String
   lastName  String
-  email     String   @unique
+  email     String
   phone     String?
   password  String
   role      Role     @default(user)
@@ -32,8 +32,6 @@ model RestaurantUser {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   deletedAt    DateTime?
-
-  @@unique([userId, restaurantId], map: "RestaurantUser_userId_restaurantId_key")
 }
 
 model RefreshToken {

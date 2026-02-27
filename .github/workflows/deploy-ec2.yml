@@ -48,6 +48,8 @@ jobs:
           context: .
           push: true
           build-args: |
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            DOPPLER_TOKEN=${{ secrets.DOPPLER_TOKEN }}
             ENV=${{ env.DEPLOY_ENV }}
             APP_VERSION=${{ env.APP_VERSION }}
           tags: |

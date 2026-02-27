@@ -25,10 +25,10 @@ export const findManyWithPassword = async (where: Prisma.UserWhereInput): Promis
 };
 
 export const findOneWithoutPassword = async (
-  where: Prisma.UserWhereUniqueInput
+  where: Prisma.UserWhereUniqueInput | { email: string }
 ): Promise<Omit<User, 'password'> | null> => {
   return prisma.user.findUnique({
-    where,
+    where: where as Prisma.UserWhereUniqueInput,
     omit: {
       password: true,
     },
@@ -36,10 +36,10 @@ export const findOneWithoutPassword = async (
 };
 
 export const findOneWithPassword = async (
-  where: Prisma.UserWhereUniqueInput
+  where: Prisma.UserWhereUniqueInput | { email: string }
 ): Promise<User | null> => {
   return prisma.user.findUnique({
-    where,
+    where: where as Prisma.UserWhereUniqueInput,
   });
 };
 

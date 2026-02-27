@@ -20,6 +20,7 @@ app.use(requestLogger as RequestHandler);
 
 app.use('/api/auth', apiKeyMiddleware, authRoutes);
 app.use('/api/users', apiKeyMiddleware, usersRoutes);
+
 app.use(commonRoutes);
 
 // Error handling (must be last)

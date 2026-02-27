@@ -5,10 +5,6 @@ ARG ENV=development
 ENV NODE_ENV=$ENV
 ARG APP_VERSION=0.0.0-dev
 ENV APP_VERSION=$APP_VERSION
-ARG DATABASE_URL
-ENV DATABASE_URL=$DATABASE_URL
-ARG DOPPLER_TOKEN
-ENV DOPPLER_TOKEN=$DOPPLER_TOKEN
 
 WORKDIR /usr/app
 
@@ -19,10 +15,21 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY prisma ./prisma
-RUN doppler run -- npx prisma generate
+
+# Use BuildKit secrets for sensitive data during build
+# Secrets are not stored in image layers and are only mounted at build time
+# Usage: docker build --secret doppler_token=<token> --secret database_url=<url> ...
+RUN --mount=type=secret,id=doppler_token \
+    --mount=type=secret,id=database_url \
+    sh -c 'export DOPPLER_TOKEN=$(cat /run/secrets/doppler_token) && \
+           export DATABASE_URL=$(cat /run/secrets/database_url) && \
+           doppler run -- npx prisma generate'
 
 COPY . .
-RUN doppler run -- npm run build
+
+RUN --mount=type=secret,id=doppler_token \
+    sh -c 'export DOPPLER_TOKEN=$(cat /run/secrets/doppler_token) && \
+           doppler run -- npm run build'
 
 FROM node:24.11.1-alpine
 

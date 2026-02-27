@@ -8,12 +8,12 @@ const validateUserPermissions = async (userId: string) => {
     id: userId,
   });
 
-  if (!user) {
+  if (!user || user.deletedAt) {
     throw new BadRequestError('User not found');
   }
 
   if (user.role !== 'restaurant_user') {
-    throw new BadRequestError('restaurant_user Role is required');
+    throw new BadRequestError('restaurant user role is required');
   }
 
   return user;
@@ -24,6 +24,7 @@ const validateRestaurantUserRecord = async (userId: string, restaurantId: string
     where: {
       userId: userId,
       restaurantId: restaurantId,
+      deletedAt: null,
     },
   });
 
@@ -56,13 +57,13 @@ export const updateRestaurantUserRole = async (
 };
 
 export const softDeleteAllRestaurantUserRecords = async (userId: string) => {
-  const updated = await prisma.restaurantUser.findMany({
+  const existingRestaurantUserRecords = await prisma.restaurantUser.findMany({
     where: {
       userId: userId,
     },
   });
 
-  if (updated.length === 0) {
+  if (existingRestaurantUserRecords.length === 0) {
     throw new NotFoundError('Restaurant user record not found');
   }
   await prisma.restaurantUser.updateMany({

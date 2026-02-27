@@ -70,9 +70,12 @@ export const signup = async (
       email: req.body.email,
     });
 
+    // Only prevent signup if the user exists AND is NOT deleted
+    // If the user is deleted (deletedAt is set), allow them to create a new account with the same email
     if (existingUser && !existingUser.deletedAt) {
       throw new ConflictError('Email is already in use');
     }
+
     logger.info({ role: 'user' }, 'Creating new user account');
 
     const createdUser = await usersDatabaseService.create({
@@ -120,11 +123,10 @@ export const login = async (
       email: req.body.email,
     });
 
-    logger.info({ userId: foundUser?.id }, 'User found');
-
     if (!foundUser || foundUser.deletedAt) {
       throw new UnauthorizedError('Invalid email or password');
     }
+    logger.info({ userId: foundUser.id }, 'User found');
 
     const isPasswordValid = await comparePasswords(req.body.password, foundUser.password);
 
@@ -233,6 +235,7 @@ export const forgotPassword = async (
 
     const foundUser = await usersDatabaseService.findOneWithoutPassword({
       email: req.body.email,
+      deletedAt: null,
     });
 
     logger.info({ userId: foundUser?.id }, 'User found');

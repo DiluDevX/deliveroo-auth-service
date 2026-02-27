@@ -10,7 +10,7 @@ import type {
 } from '../dtos/user.dto';
 import { CommonResponseDTO, IdRequestPathParamsDTO } from '../dtos/common.dto';
 import * as usersDatabaseService from '../services/users.database.service';
-import { NotFoundError } from '../utils/errors';
+import { ConflictError, NotFoundError } from '../utils/errors';
 import HttpStatusCodes from 'http-status-codes';
 import { logger } from '../utils/logger';
 
@@ -75,6 +75,13 @@ export const createUser = async (
   next: NextFunction
 ) => {
   try {
+    const existingUser = await usersDatabaseService.findOneWithoutPassword({
+      email: req.body.email,
+    });
+
+    if (existingUser && !existingUser.deletedAt) {
+      throw new ConflictError('Email is already in use');
+    }
     logger.info({ role: 'user' }, 'Creating new user');
 
     const createdUser = await usersDatabaseService.create({
@@ -112,12 +119,14 @@ export const updateUser = async (
     if (!user) {
       throw new NotFoundError('User not found');
     }
+
+    logger.info({ userId }, 'User updated successfully');
+
     res.status(HttpStatusCodes.OK).json({
       success: true,
       message: 'User updated successfully',
       data: user,
     });
-    logger.info({ userId }, 'User updated successfully');
   } catch (error) {
     logger.error(
       { error: error instanceof Error ? error.message : 'Unknown error' },
