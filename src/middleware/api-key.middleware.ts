@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { timingSafeEqual } from 'crypto';
+import { timingSafeEqual } from 'node:crypto';
 import { environment } from '../config/environment';
 import HttpStatusCodes from 'http-status-codes';
 

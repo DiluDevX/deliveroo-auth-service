@@ -15,7 +15,7 @@ export const escapeHtml = (text: string): string => {
     '/': '&#x2F;',
   };
 
-  return text.replace(/[&<>"'/]/g, (char) => htmlEscapeMap[char]);
+  return text.replaceAll(/[&<>"'/]/g, (char) => htmlEscapeMap[char]);
 };
 
 /**
@@ -49,7 +49,7 @@ const isValidProtocol = (url: string): boolean => {
 
   if (isAllowed) {
     // Additional validation using URL constructor for http/https
-    if (trimmedUrl.match(/^https?:\/\//i)) {
+    if (/^https?:\/\//i.test(trimmedUrl)) {
       try {
         new URL(trimmedUrl);
         return true;

@@ -70,8 +70,6 @@ export const signup = async (
       email: req.body.email,
     });
 
-    // Only prevent signup if the user exists AND is NOT deleted
-    // If the user is deleted (deletedAt is set), allow them to create a new account with the same email
     if (existingUser && !existingUser.deletedAt) {
       throw new ConflictError('Email is already in use');
     }

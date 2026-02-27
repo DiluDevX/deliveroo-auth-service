@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { logger } from '../utils/logger';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuid } from 'uuid';
 
 declare module 'express' {
   interface Request {
@@ -9,7 +9,7 @@ declare module 'express' {
 }
 
 export function requestLogger(req: Request, res: Response, next: NextFunction): void {
-  const requestId = uuidv4();
+  const requestId = uuid();
   req.requestId = requestId;
 
   const startTime = Date.now();

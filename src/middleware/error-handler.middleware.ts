@@ -12,64 +12,60 @@ interface ErrorResponse {
   stack?: string;
 }
 
-export function errorHandler(err: Error, _req: Request, res: Response, _next: NextFunction): void {
-  logger.error({
+function handleAppError(err: AppError, res: Response): void {
+  const response: ErrorResponse = {
+    success: false,
     message: err.message,
-    stack: err.stack,
-    name: err.name,
-  });
+    code: err.code,
+  };
 
-  // Handle known operational errors
-  if (err instanceof AppError) {
-    const response: ErrorResponse = {
+  if (err instanceof ValidationError) {
+    response.errors = err.errors;
+  }
+
+  if (environment.env !== EnvironmentEnum.Production) {
+    response.stack = err.stack;
+  }
+
+  res.status(err.statusCode).json(response);
+}
+
+function handlePrismaError(err: Error, res: Response): boolean {
+  if (err.name !== 'PrismaClientKnownRequestError') {
+    return false;
+  }
+
+  const prismaError = err as Prisma.PrismaClientKnownRequestError;
+
+  if (prismaError.code === 'P2002') {
+    const target = prismaError.meta?.target;
+    const field = Array.isArray(target) ? target[0] : target;
+    res.status(HttpStatusCodes.CONFLICT).json({
       success: false,
-      message: err.message,
-      code: err.code,
-    };
-
-    if (err instanceof ValidationError) {
-      response.errors = err.errors;
-    }
-
-    if (environment.env !== EnvironmentEnum.Production) {
-      response.stack = err.stack;
-    }
-
-    res.status(err.statusCode).json(response);
-    return;
+      message: 'A record with this value already exists',
+      field: field,
+    });
+    return true;
   }
 
-  // Handle Prisma errors
-  if (err.name === 'PrismaClientKnownRequestError') {
-    const prismaError = err as Prisma.PrismaClientKnownRequestError;
-
-    if (prismaError.code === 'P2002') {
-      const target = prismaError.meta?.target;
-      const field = Array.isArray(target) ? target[0] : target;
-      res.status(HttpStatusCodes.CONFLICT).json({
-        success: false,
-        message: 'A record with this value already exists',
-        field: field,
-      });
-      return;
-    }
-
-    if (prismaError.code === 'P2025') {
-      res.status(HttpStatusCodes.NOT_FOUND).json({
-        success: false,
-        message: 'Record not found',
-      });
-      return;
-    }
+  if (prismaError.code === 'P2025') {
+    res.status(HttpStatusCodes.NOT_FOUND).json({
+      success: false,
+      message: 'Record not found',
+    });
+    return true;
   }
 
-  // Handle JWT errors
+  return false;
+}
+
+function handleJwtError(err: Error, res: Response): boolean {
   if (err.name === 'JsonWebTokenError') {
     res.status(HttpStatusCodes.UNAUTHORIZED).json({
       success: false,
       message: 'Invalid token',
     });
-    return;
+    return true;
   }
 
   if (err.name === 'TokenExpiredError') {
@@ -77,10 +73,28 @@ export function errorHandler(err: Error, _req: Request, res: Response, _next: Ne
       success: false,
       message: 'Token expired',
     });
+    return true;
+  }
+
+  return false;
+}
+
+export function errorHandler(err: Error, _req: Request, res: Response, _next: NextFunction): void {
+  logger.error({
+    message: err.message,
+    stack: err.stack,
+    name: err.name,
+  });
+
+  if (err instanceof AppError) {
+    handleAppError(err, res);
     return;
   }
 
-  // Handle unknown errors
+  if (handlePrismaError(err, res) || handleJwtError(err, res)) {
+    return;
+  }
+
   const response: ErrorResponse = {
     success: false,
     message: environment.env === EnvironmentEnum.Production ? 'Internal Server Error' : err.message,

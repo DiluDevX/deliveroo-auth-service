@@ -7,10 +7,10 @@ declare global {
 }
 
 // Prevent multiple instances during hot reload in development
-export const prisma = global.prisma || new PrismaClient();
+export const prisma = globalThis.prisma || new PrismaClient();
 
 if (environment.env !== EnvironmentEnum.Production) {
-  global.prisma = prisma;
+  globalThis.prisma = prisma;
 }
 
 export async function connectDatabase(): Promise<void> {
