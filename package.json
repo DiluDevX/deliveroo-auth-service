@@ -45,7 +45,7 @@
     "resend": "^6.9.2",
     "uuid": "^11.0.5",
     "zod": "^3.25.76",
-    "pino": "^9.6.0"
+    "pino": "^10.3.1"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.4.2",
@@ -70,7 +70,7 @@
     "globals": "^15.14.0",
     "husky": "^9.1.7",
     "nodemon": "^3.1.9",
-    "pino": "^9.6.0",
+    "pino": "^10.3.1",
     "pino-pretty": "^13.0.0",
     "prettier": "3.4.2",
     "prisma": "^6.2.0",
